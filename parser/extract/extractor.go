@@ -1,4 +1,4 @@
-package extractor
+package extract
 
 import (
 	"bufio"
@@ -61,4 +61,13 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func getTotalInCategory(scanner *bufio.Scanner) int64 {
+	scanner.Scan()
+	scanner.Scan()
+	line := strings.ReplaceAll(scanner.Text(), ".", "")
+	i, _ := strconv.ParseInt(line, 10, 64)
+
+	return i
 }
