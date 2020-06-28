@@ -3,7 +3,6 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -110,8 +109,6 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 				index++
 				skip = append(skip, strconv.Itoa(index))
 			}
-
-			//fmt.Println(v)
 		}
 
 		opts.counter++
@@ -138,7 +135,6 @@ type vehicleOpts struct {
 }
 
 func getVehicle1(opts *vehicleOpts, line string) *declaration.Vehicle {
-	fmt.Println(line)
 	switch opts.counter {
 	case 0:
 		opts.vehicle.Tipo = line

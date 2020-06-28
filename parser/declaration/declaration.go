@@ -14,10 +14,11 @@ type Declaration struct {
 	Institucion string
 
 	// Activos
-	Deposits   []*Deposit
-	Debtors    []*Debtor
-	RealStates []*RealState
-	Vehicles   []*Vehicle
+	Deposits     []*Deposit
+	Debtors      []*Debtor
+	RealStates   []*RealState
+	Vehicles     []*Vehicle
+	Agricultural []*Agricultural
 }
 
 // Deposit describes money at a financial institution.
@@ -62,14 +63,14 @@ type Vehicle struct {
 	Fabricacion int
 }
 
-func (v *Vehicle) String() string {
-	return fmt.Sprintf("Tipo: %s\n"+
-		"Marca: %s\n"+
-		"Modelo: %s\n"+
-		"Importe: %d\n"+
-		"Adquisicion: %d\n"+
-		"Fabricacion: %d\n",
-		v.Tipo, v.Marca, v.Modelo, v.Importe, v.Adquisicion, v.Fabricacion)
+// Agricultural is an official's agricultural activity.
+type Agricultural struct {
+	Tipo      string
+	Ubicacion string
+	Especie   string
+	Cantidad  int64
+	Precio    int64
+	Importe   int64
 }
 
 func (d *Deposit) String() string {
@@ -104,4 +105,24 @@ func (s *RealState) String() string {
 		s.Padron, s.Uso, s.Pais, s.Distrito, s.Adquisicion, s.TipoAdquisicion,
 		s.SuperficieTerreno, s.ValorTerreno, s.SuperficieConstruccion, s.ValorConstruccion,
 		s.Importe)
+}
+
+func (v *Vehicle) String() string {
+	return fmt.Sprintf("Tipo: %s\n"+
+		"Marca: %s\n"+
+		"Modelo: %s\n"+
+		"Importe: %d\n"+
+		"Adquisicion: %d\n"+
+		"Fabricacion: %d\n",
+		v.Tipo, v.Marca, v.Modelo, v.Importe, v.Adquisicion, v.Fabricacion)
+}
+
+func (a *Agricultural) String() string {
+	return fmt.Sprintf("Tipo Actividad: %s\n"+
+		"Ubicación: %s\n"+
+		"Especie: %s\n"+
+		"Cantidad: %d\n"+
+		"Precio: %d\n"+
+		"Importe: %d\n",
+		a.Tipo, a.Ubicacion, a.Especie, a.Cantidad, a.Precio, a.Importe)
 }
