@@ -43,6 +43,11 @@ func main() {
 	scanner = bufio.NewScanner(data)
 	d.RealStates = extract.RealStates(scanner)
 
+	// Vehicles
+	data, _ = os.Open(file)
+	scanner = bufio.NewScanner(data)
+	d.Vehicles = extract.Vehicles(scanner)
+
 	print(d)
 }
 
@@ -75,5 +80,10 @@ func print(d *declaration.Declaration) {
 			fmt.Println("...")
 			break
 		}
+	}*/
+
+	/*fmt.Print("\nVehículos:\n")
+	for _, vehicle := range d.Vehicles {
+		fmt.Println(vehicle)
 	}*/
 }

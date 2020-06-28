@@ -17,6 +17,7 @@ type Declaration struct {
 	Deposits   []*Deposit
 	Debtors    []*Debtor
 	RealStates []*RealState
+	Vehicles   []*Vehicle
 }
 
 // Deposit describes money at a financial institution.
@@ -49,6 +50,26 @@ type RealState struct {
 	SuperficieConstruccion int64
 	ValorConstruccion      int64
 	Importe                int64
+}
+
+// Vehicle is a vehicle owned by the official.
+type Vehicle struct {
+	Tipo        string
+	Marca       string
+	Modelo      string
+	Importe     int64
+	Adquisicion int
+	Fabricacion int
+}
+
+func (v *Vehicle) String() string {
+	return fmt.Sprintf("Tipo: %s\n"+
+		"Marca: %s\n"+
+		"Modelo: %s\n"+
+		"Importe: %d\n"+
+		"Adquisicion: %d\n"+
+		"Fabricacion: %d\n",
+		v.Tipo, v.Marca, v.Modelo, v.Importe, v.Adquisicion, v.Fabricacion)
 }
 
 func (d *Deposit) String() string {
