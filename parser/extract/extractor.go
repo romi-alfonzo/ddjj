@@ -2,6 +2,7 @@ package extract
 
 import (
 	"bufio"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -70,4 +71,48 @@ func getTotalInCategory(scanner *bufio.Scanner) int64 {
 	i, _ := strconv.ParseInt(line, 10, 64)
 
 	return i
+}
+
+func stringToInt64(line string) int64 {
+	value := strings.ReplaceAll(line, ".", "")
+	i, _ := strconv.ParseInt(value, 10, 64)
+
+	return i
+}
+
+func stringToInt(line string) int {
+	i, _ := strconv.Atoi(line)
+
+	return i
+}
+
+func stringToYear(line string) int {
+	year := stringToInt(line)
+
+	if year == 0 {
+		return 0
+	}
+
+	if year < 100 {
+		return 2000 + year
+	}
+
+	return year
+}
+
+func isDate(line string) bool {
+	matched, _ := regexp.MatchString(`[0-9]{2}\/[0-9]{2}\/[0-9]{4}`, line)
+	return matched
+}
+
+func isBarCode(line string) bool {
+	matched, _ := regexp.MatchString(`[0-9]{5,6}-[0-9]{5,6}-[0-9]{2,3}`, line)
+	return matched
+}
+
+func isNumber(line string) bool {
+	line = strings.ReplaceAll(line, ".", "")
+	_, err := strconv.ParseInt(line, 10, 64)
+
+	return err == nil
 }

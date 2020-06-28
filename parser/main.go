@@ -38,6 +38,11 @@ func main() {
 	scanner = bufio.NewScanner(data)
 	d.Debtors = extract.Debtors(scanner)
 
+	// Real state.
+	data, _ = os.Open(file)
+	scanner = bufio.NewScanner(data)
+	d.RealStates = extract.RealStates(scanner)
+
 	print(d)
 }
 
@@ -45,13 +50,30 @@ func print(d *declaration.Declaration) {
 	fmt.Printf("Año: %d\nCedula: %d\nName: %s\nInstitution: %s\nJob: %s\n",
 		d.Ano, d.Cedula, d.Nombre+" "+d.Apellido, d.Institucion, d.Funcion)
 
-	fmt.Printf("\nDepósitos:\n")
-	for _, deposit := range d.Deposits {
+	/*fmt.Printf("\nDepósitos:\n")
+	for i, deposit := range d.Deposits {
 		fmt.Println(deposit)
+		if i > 1 {
+			fmt.Println("...")
+			break
+		}
 	}
 
 	fmt.Print("\nCuentas a cobrar:\n")
-	for _, debtor := range d.Debtors {
+	for i, debtor := range d.Debtors {
 		fmt.Println(debtor)
+		if i > 1 {
+			fmt.Println("...")
+			break
+		}
 	}
+
+	fmt.Print("\nInmuebles:\n")
+	for i, state := range d.RealStates {
+		fmt.Println(state)
+		if i > 1 {
+			fmt.Println("...")
+			break
+		}
+	}*/
 }

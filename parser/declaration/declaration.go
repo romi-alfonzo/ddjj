@@ -14,8 +14,9 @@ type Declaration struct {
 	Institucion string
 
 	// Activos
-	Deposits []*Deposit
-	Debtors  []*Debtor
+	Deposits   []*Deposit
+	Debtors    []*Debtor
+	RealStates []*RealState
 }
 
 // Deposit describes money at a financial institution.
@@ -27,12 +28,27 @@ type Deposit struct {
 	Importe     int64
 }
 
-// Debtor describe a person that owns money to the official.
+// Debtor describes a person that owns money to the official.
 type Debtor struct {
 	Nombre  string
 	Clase   string
 	Plazo   int
 	Importe int64
+}
+
+// RealState is a real state owned by the official.
+type RealState struct {
+	Padron                 string
+	Uso                    string
+	Pais                   string
+	Distrito               string
+	Adquisicion            int
+	TipoAdquisicion        string
+	SuperficieTerreno      int64
+	ValorTerreno           int64
+	SuperficieConstruccion int64
+	ValorConstruccion      int64
+	Importe                int64
 }
 
 func (d *Deposit) String() string {
@@ -50,4 +66,21 @@ func (d *Debtor) String() string {
 		"Plazo: %d\n"+
 		"Importe: %d\n",
 		d.Nombre, d.Clase, d.Plazo, d.Importe)
+}
+
+func (s *RealState) String() string {
+	return fmt.Sprintf("Padron: %s\n"+
+		"Uso: %s\n"+
+		"Pais: %s\n"+
+		"Distrito: %s\n"+
+		"Adquisicion: %d\n"+
+		"TipoAdquisicion: %s\n"+
+		"SuperficieTerreno: %d\n"+
+		"ValorTerreno: %d\n"+
+		"SuperficieConstruccion: %d\n"+
+		"ValorConstruccion: %d\n"+
+		"Importe: %d\n",
+		s.Padron, s.Uso, s.Pais, s.Distrito, s.Adquisicion, s.TipoAdquisicion,
+		s.SuperficieTerreno, s.ValorTerreno, s.SuperficieConstruccion, s.ValorConstruccion,
+		s.Importe)
 }
