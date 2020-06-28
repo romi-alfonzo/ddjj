@@ -92,8 +92,8 @@ func print(d *declaration.Declaration) {
 		fmt.Println(vehicle)
 	}*/
 
-	fmt.Print("\nActividad Agropecuaria:\n")
+	/*fmt.Print("\nActividad Agropecuaria:\n")
 	for _, activity := range d.Agricultural {
 		fmt.Println(activity)
-	}
+	}*/
 }

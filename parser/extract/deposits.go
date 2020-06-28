@@ -99,9 +99,18 @@ func getDeposit(opts *depositOpts, line string) *declaration.Deposit {
 		opts.deposit.Pais = line
 		break
 	case 4:
-		value := strings.ReplaceAll(line, ".", "")
-		i, _ := strconv.ParseInt(value, 10, 64)
-		opts.deposit.Importe = i
+		// En algunos casos, el tipo de entidad aparece último. Ejemplo: la
+		// declaración de 2014 de Blas Lanzoni
+		if !isNumber(line) {
+			opts.deposit.Importe = stringToInt64(opts.deposit.Pais)
+			opts.deposit.Pais = opts.deposit.Tipo
+			opts.deposit.Tipo = opts.deposit.Entidad
+			opts.deposit.TipoEntidad = line
+
+			return opts.deposit
+		}
+
+		opts.deposit.Importe = stringToInt64(line)
 		return opts.deposit
 	}
 

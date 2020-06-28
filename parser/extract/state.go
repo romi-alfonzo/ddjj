@@ -3,7 +3,6 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -16,6 +15,7 @@ var stateUses = []string{
 	"ALQUILER",
 	"GRANJA",
 	"EXPLOTACION",
+	"TERRENO SIN",
 	"CANTERA",
 }
 
@@ -110,7 +110,6 @@ func RealStates(scanner *bufio.Scanner) []*declaration.RealState {
 
 	totalState := addRealState(states)
 	if totalState != total {
-		fmt.Println(total, totalState)
 		log.Fatal("The amounts in real state do not match")
 	}
 
@@ -137,6 +136,8 @@ func getRealState(opts *stateOpts, line string) *declaration.RealState {
 		return getRealState3(opts, line)
 	case 4:
 		return getRealState4(opts, line)
+	case 5:
+		return getRealState5(opts, line)
 	}
 
 	return nil
@@ -154,7 +155,7 @@ func getRealState1(opts *stateOpts, line string) *declaration.RealState {
 		break
 	case 2:
 		// Usos que empiezan con "EXPLOTACION" tienen dos líneas.
-		if line == "EXPLOTACION" {
+		if line == "EXPLOTACION" || line == "TERRENO SIN" {
 			opts.scanner.Scan()
 			nextLine := opts.scanner.Text()
 			opts.state.Uso = line + " " + nextLine
@@ -232,7 +233,7 @@ func getRealState2(opts *stateOpts, line string) *declaration.RealState {
 		break
 	case 4:
 		// Usos que empiezan con "EXPLOTACION" tienen dos líneas.
-		if line == "EXPLOTACION" {
+		if line == "EXPLOTACION" || line == "TERRENO SIN" {
 			opts.scanner.Scan()
 			nextLine := opts.scanner.Text()
 			opts.state.Uso = line + " " + nextLine
@@ -284,7 +285,7 @@ func getRealState3(opts *stateOpts, line string) *declaration.RealState {
 		break
 	case 3:
 		// Usos que empiezan con "EXPLOTACION" tienen dos líneas.
-		if line == "EXPLOTACION" {
+		if line == "EXPLOTACION" || line == "TERRENO SIN" {
 			opts.scanner.Scan()
 			nextLine := opts.scanner.Text()
 			opts.state.Uso = line + " " + nextLine
@@ -324,14 +325,19 @@ func getRealState3(opts *stateOpts, line string) *declaration.RealState {
 
 // Este es el caso cuando el el padrón y el uso aparecen antes que el pais.
 // Esto sucece, por ejemplo, en la declaración de Juan Eudes Afara Maciel del
-// 2014.
+// 2014, primer item en página 4.
+// También: Blas Lanzoni 2014, padrón 27-0285-02
 func getRealState4(opts *stateOpts, line string) *declaration.RealState {
-	opts.state.Padron = opts.state.Pais
-
 	switch opts.counter {
 	case 0:
+		// En algunos casos, el Padrón es extraído antes que el país
+		// Ejemplo: Blas Lanzoni 2014, padrón 27-0285-04
+		if !isCountry(opts.state.Pais) {
+			opts.state.Padron = opts.state.Pais
+		}
+
 		// Usos que empiezan con "EXPLOTACION" tienen dos líneas.
-		if line == "EXPLOTACION" {
+		if line == "EXPLOTACION" || line == "TERRENO SIN" {
 			opts.scanner.Scan()
 			nextLine := opts.scanner.Text()
 			opts.state.Uso = line + " " + nextLine
@@ -340,9 +346,23 @@ func getRealState4(opts *stateOpts, line string) *declaration.RealState {
 		opts.state.Uso = line
 		break
 	case 1:
+		// En algunos casos, el Padrón es extraído antes que el país
+		// Ejemplo: Blas Lanzoni 2014, padrón 27-0285-04
+		if opts.state.Padron == "" {
+			opts.state.Padron = line
+			break
+		}
 		opts.state.Pais = line
 		break
 	case 2:
+		// Esto nos lleva al 5 caso.
+		// Ver comentario en getRealState5.
+		if isNumber(line) {
+			opts.state.SuperficieTerreno = stringToInt64(opts.state.Pais)
+			opts.state.ValorTerreno = stringToInt64(line)
+			opts.typ = 5
+			break
+		}
 		opts.state.Distrito = line
 		break
 	case 3:
@@ -372,6 +392,37 @@ func getRealState4(opts *stateOpts, line string) *declaration.RealState {
 		return opts.state
 	}
 
+	return nil
+}
+
+// Este es el caso en el que el padrón, uso, superficie y valor del terreno
+// aparecen antes del país.
+// Esto sucede, por ejemplo, Blas Lanzoni 2014, padrón 27-0285-02.
+func getRealState5(opts *stateOpts, line string) *declaration.RealState {
+	switch opts.counter {
+	case 3:
+		opts.state.Pais = line
+		break
+	case 4:
+		opts.state.Distrito = line
+		break
+	case 5:
+		opts.state.Adquisicion = stringToYear(line)
+		break
+	case 6:
+		opts.state.SuperficieConstruccion = stringToInt64(line)
+		break
+	case 7:
+		opts.state.ValorConstruccion = stringToInt64(line)
+		break
+	case 8:
+		opts.state.Importe = stringToInt64(line)
+		break
+	case 9:
+		opts.state.TipoAdquisicion = line
+		opts.typ = 1
+		return opts.state
+	}
 	return nil
 }
 

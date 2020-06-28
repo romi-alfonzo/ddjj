@@ -21,7 +21,6 @@ const CreditoSchema = new Schema({
  * Immueble.
  */
 interface Inmueble {
-  finca: String;
   padron: String;
   uso: String;
   pais: String;
@@ -29,13 +28,12 @@ interface Inmueble {
   adquisicion: Number;
   tipoAdquisicion: String;
   superficie: Number;
-  valorCompra: Number;
-  valorAgregado: Number;
+  valorTerreno: Number;
+  valorConstruccion: Number;
   importe: Number;
 }
 
 const InmuebleSchema = new Schema({
-  finca: { type: String, required: true },
   padron: { type: String, required: true },
   uso: { type: String, required: true },
   pais: { type: String, required: true },
@@ -43,8 +41,8 @@ const InmuebleSchema = new Schema({
   adquisicion: { type: Number, required: true },
   tipoAdquisicion: { type: String, required: true },
   superficie: { type: Number, required: true },
-  valorCompra: { type: Number, required: true },
-  valorAgregado: { type: Number, required: true },
+  valorTerreno: { type: Number, required: true },
+  valorConstruccion: { type: Number, required: true },
   importe: { type: Number, required: true },
 }, { _id : false });
 

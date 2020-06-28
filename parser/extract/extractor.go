@@ -2,6 +2,7 @@ package extract
 
 import (
 	"bufio"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -106,7 +107,7 @@ func isDate(line string) bool {
 }
 
 func isBarCode(line string) bool {
-	matched, _ := regexp.MatchString(`[0-9]{5,6}-[0-9]{5,6}-[0-9]{2,3}`, line)
+	matched, _ := regexp.MatchString(`[0-9]{5,6}-[0-9]{5,7}-[0-9]{2,3}`, line)
 	return matched
 }
 
@@ -115,4 +116,20 @@ func isNumber(line string) bool {
 	_, err := strconv.ParseInt(line, 10, 64)
 
 	return err == nil
+}
+
+func isCountry(line string) bool {
+	resp, err := http.Get("https://restcountries.eu/rest/v2/name/" + line)
+
+	if err != nil {
+		return false
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return false
+	}
+
+	return true
 }

@@ -25,7 +25,7 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 
 	var vehicles []*declaration.Vehicle
 	opts := &vehicleOpts{
-		vehicle: &declaration.Vehicle{},
+		vehicle: &declaration.Vehicle{Adquisicion: -1},
 		counter: 0,
 	}
 
@@ -51,6 +51,7 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 			opts.importesIndex = 0
 			opts.afterImportes = 0
 			opts.counter = 0
+			opts.vehicle.Adquisicion = -1
 			index = 1
 		}
 
@@ -98,7 +99,7 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 		if v != nil {
 			vehicles = append(vehicles, v)
 			opts.counter = -1
-			opts.vehicle = &declaration.Vehicle{}
+			opts.vehicle = &declaration.Vehicle{Adquisicion: -1}
 
 			if index == 1 {
 				opts.firstIndex = v
@@ -140,35 +141,41 @@ func getVehicle1(opts *vehicleOpts, line string) *declaration.Vehicle {
 		opts.vehicle.Tipo = line
 		break
 	case 1:
+		// En algunos casos como los de Justo Zacarias, 2014 y Blas Lanzoni 2014,
+		// todos los datos del primer item se extraían antes de todos los importes.
+		// En esos casos, lo que se ingreso como la marca, en realidad es el año de adquisicion
+		year := strings.TrimPrefix(line, "AÑO ADQUIS.: ")
+
+		// El año de adquisición aparece antes que la marca.
+		if year != line {
+			opts.vehicle.Adquisicion = stringToYear(year)
+			break
+		}
+
 		opts.vehicle.Marca = line
 		break
 	case 2:
-		opts.vehicle.Modelo = line
-		break
-	case 3:
-		if isNumber(line) {
-			opts.vehicle.Importe = stringToInt64(line)
-
-			return opts.vehicle
-		}
-
-		// En algunos casos como los de Justo Zacarias, 2014, todos los datos del
-		// primer item se extraían antes de todos los importes. En esos casos,
-		// lo que se ingreso como la marca, en realidad es el año de adquisicion
-		year := strings.TrimPrefix(opts.vehicle.Marca, "AÑO ADQUIS.: ")
-
-		// En otros casos, como en el de Gonzales Daher, 2016, el orden era correcto.
-		// Entonces si la operacion de arriba cambió el valor, el orden no era correcto.
-		if year != opts.vehicle.Marca {
-			opts.vehicle.Adquisicion = stringToYear(year)
-
-			opts.vehicle.Marca = opts.vehicle.Modelo
+		if opts.vehicle.Marca != "" {
 			opts.vehicle.Modelo = line
 			break
 		}
 
-		year = strings.TrimPrefix(line, "AÑO ADQUIS.: ")
-		opts.vehicle.Adquisicion = stringToYear(year)
+		opts.vehicle.Marca = line
+		break
+	case 3:
+
+		if opts.vehicle.Adquisicion == -1 && isNumber(line) {
+			opts.vehicle.Importe = stringToInt64(line)
+			return opts.vehicle
+		}
+
+		if opts.vehicle.Adquisicion == -1 {
+			year := strings.TrimPrefix(line, "AÑO ADQUIS.: ")
+			opts.vehicle.Adquisicion = stringToYear(year)
+			break
+		}
+
+		opts.vehicle.Modelo = line
 		break
 	case 4:
 		year := strings.TrimPrefix(line, "AÑO FABR.: ")
