@@ -107,7 +107,7 @@ func isDate(line string) bool {
 }
 
 func isBarCode(line string) bool {
-	matched, _ := regexp.MatchString(`[0-9]{5,6}-[0-9]{5,7}-[0-9]{2,3}`, line)
+	matched, _ := regexp.MatchString(`[0-9]{5,6}-[0-9]{5,7}-[0-9]{1,3}`, line)
 	return matched
 }
 

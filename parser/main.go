@@ -76,15 +76,11 @@ func print(d *declaration.Declaration) {
 			fmt.Println("...")
 			break
 		}
-	}
+	}*/
 
-	fmt.Print("\nInmuebles:\n")
-	for i, state := range d.RealStates {
+	/*fmt.Print("\nInmuebles:\n")
+	for _, state := range d.RealStates {
 		fmt.Println(state)
-		if i > 1 {
-			fmt.Println("...")
-			break
-		}
 	}*/
 
 	/*fmt.Print("\nVehículos:\n")

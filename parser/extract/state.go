@@ -8,422 +8,299 @@ import (
 	"strings"
 )
 
-var stateUses = []string{
-	"VIVIENDA",
-	"BALDIO",
-	"TERRENO BALDIO",
-	"ALQUILER",
-	"GRANJA",
+var stateTwoLines = []string{
 	"EXPLOTACION",
 	"TERRENO SIN",
-	"CANTERA",
+	"EDIFICACIONES",
+	"EDIFICACION PARA",
+	"ADJUDICACION SEGUN",
+}
+
+var totalInState int64
+
+var stateItemNumber int
+
+var skipState = []string{
+	"#",
+	"Nº FINCA",
+	"DATOS PROTEGIDOS",
+	"PAÍS:",
+	"CTA. CTE. CTRAL. O PADRON",
+	"USO",
+	"DISTRITO:",
+	"SUP. M2",
+	"AÑO DE ADQ.",
+	"VALOR CONST. G.",
+	"CONST.",
+	"VALOR TERRENO G.",
+	"TIPO DE ADQ.:",
+	"IMPORTE",
 }
 
 // RealStates returns the real states owned by the official.
 func RealStates(scanner *bufio.Scanner) []*declaration.RealState {
 
-	var skip = []string{
-		"#",
-		"Nº FINCA",
-		"DATOS PROTEGIDOS",
-		"PAÍS:",
-		"CTA. CTE. CTRAL. O PADRON",
-		"USO",
-		"DISTRITO:",
-		"SUP. M2",
-		"AÑO DE ADQ.",
-		"VALOR CONST. G.",
-		"CONST.",
-		"VALOR TERRENO G.",
-		"TIPO DE ADQ.:",
-		"IMPORTE",
-	}
-
 	scanner = moveUntil(scanner, "1.4 INMUEBLES", true)
-
 	var states []*declaration.RealState
-	opts := &stateOpts{
-		state:   &declaration.RealState{},
-		counter: 0,
-		typ:     1,
-		scanner: scanner,
+
+	values := [11]string{}
+	index := 0
+	stateItemNumber = 1
+
+	// Also wants to skip item number
+	skipState = append(skipState, strconv.Itoa(stateItemNumber))
+
+	line, _ := getStateLine(scanner)
+	for line != "" {
+
+		values[index] = line
+
+		// After reading all the possible values for a single item.
+		if index == 10 {
+			state := getState(scanner, values)
+			//fmt.Println(state)
+			states = append(states, state...)
+
+			// Skip the next item number.
+			stateItemNumber++
+			skipState[len(skipState)-1] = strconv.Itoa(stateItemNumber)
+
+			index = -1
+		}
+
+		index++
+
+		//var nextPage bool
+		line, _ = getStateLine(scanner)
+		/*if nextPage {
+			fmt.Println(totalInState, addRealState(states))
+		}*/
 	}
 
-	index := 1
-	skip = append(skip, strconv.Itoa(index))
-	var total int64
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Stop looking for real state when this is found.
-		if line == "TOTAL INMUEBLES:" {
-			total = getTotalInCategory(scanner)
-
-			// Next page or end.
-			scanner = moveUntil(scanner, "Nº FINCA", true)
-			line = scanner.Text()
-			if line == "" {
-				break
-			}
-
-			opts.next = nil
-			opts.previous = nil
-			index = 1
-			skip[len(skip)-1] = strconv.Itoa(index)
+	total := addRealState(states)
+	if total != totalInState {
+		/*for _, state := range states {
+			fmt.Println(state)
 		}
-
-		if strings.Contains(line, "OBS:") || strings.Contains(line, "RECEPCIONADO EL:") ||
-			isDate(line) || isBarCode(line) {
-
-			continue
-		}
-		if contains(skip, line) || line == "" {
-			continue
-		}
-
-		// Ver el comentario en getRealState4.
-		if opts.typ == 1 && opts.state.Padron == "" && contains(stateUses, line) {
-			opts.typ = 4
-			opts.counter = 0
-		}
-
-		s := getRealState(opts, line)
-		if s != nil {
-			states = append(states, s)
-			opts.counter = -1
-
-			if opts.next != nil {
-				opts.state = opts.next
-			} else {
-				opts.state = &declaration.RealState{}
-			}
-
-			opts.previous = s
-
-			// Skip the following item #.
-			index++
-			skip[len(skip)-1] = strconv.Itoa(index)
-		}
-
-		opts.counter++
-	}
-
-	totalState := addRealState(states)
-	if totalState != total {
+		fmt.Println(totalInState, total)*/
 		log.Fatal("The amounts in real state do not match")
 	}
 
 	return states
 }
 
-type stateOpts struct {
-	state    *declaration.RealState
-	next     *declaration.RealState
-	previous *declaration.RealState
-	scanner  *bufio.Scanner
-	counter  int
-	typ      int
-}
+func getState(scanner *bufio.Scanner, values [11]string) []*declaration.RealState {
 
-func getRealState(opts *stateOpts, line string) *declaration.RealState {
+	// Casos 1, 4, 5.
+	if isCountry(values[0]) {
+		// En el caso 1, el valor en el último index es el tipo de adquisición.
+		if !isNumber(values[10]) {
+			return getState1(values)
+		}
 
-	switch opts.typ {
-	case 1:
-		return getRealState1(opts, line)
-	case 2:
-		return getRealState2(opts, line)
-	case 3:
-		return getRealState3(opts, line)
-	case 4:
-		return getRealState4(opts, line)
-	case 5:
-		return getRealState5(opts, line)
+		value12, _ := getStateLine(scanner)
+
+		// Caso 4.
+		if isNumber(value12) {
+			return getState4(values, value12, scanner)
+		}
+
+		// Caso 5.
+		return getState5(values, value12, scanner)
 	}
 
-	return nil
-}
-
-// Este es el caso de la mayoría de los items. Los valores se extraen en este
-// orden.
-func getRealState1(opts *stateOpts, line string) *declaration.RealState {
-	switch opts.counter {
-	case 0:
-		opts.state.Pais = line
-		break
-	case 1:
-		opts.state.Padron = line
-		break
-	case 2:
-		// Usos que empiezan con "EXPLOTACION" tienen dos líneas.
-		if line == "EXPLOTACION" || line == "TERRENO SIN" {
-			opts.scanner.Scan()
-			nextLine := opts.scanner.Text()
-			opts.state.Uso = line + " " + nextLine
-			break
-		}
-
-		opts.state.Uso = line
-		break
-	case 3:
-		opts.state.Distrito = line
-		break
-	case 4:
-		value, _ := strconv.ParseInt(line, 10, 64)
-		opts.state.SuperficieTerreno = value
-		break
-	case 5:
-		opts.state.ValorTerreno = stringToInt64(line)
-		break
-	case 6:
-		opts.state.Adquisicion = stringToYear(line)
-		break
-	case 7:
-		value, _ := strconv.ParseInt(line, 10, 64)
-		opts.state.SuperficieConstruccion = value
-		break
-	case 8:
-		opts.state.ValorConstruccion = stringToInt64(line)
-		break
-	case 9:
-		opts.state.Importe = stringToInt64(line)
-		break
-	case 10:
-		if isNumber(line) {
-			s := opts.state
-			// Ver el comentario en getRealState2.
-			opts.next = &declaration.RealState{}
-			opts.next.ValorConstruccion = stringToInt64(line)
-			opts.typ = 2
-
-			// Ver comentario en getRealState3.
-			if s.Importe != s.ValorTerreno+s.ValorConstruccion {
-				opts.next.Adquisicion = int(s.SuperficieConstruccion)
-				s.SuperficieConstruccion = s.ValorConstruccion
-				s.ValorConstruccion = s.Importe
-				s.Importe = stringToInt64(line)
-				opts.typ = 3
-			}
-		} else {
-			opts.state.TipoAdquisicion = line
-		}
-
-		return opts.state
+	// Caso 2.
+	if isNumber(values[3]) {
+		return getState2(values)
 	}
 
-	return nil
+	return getState3(values)
 }
 
-// Este caso sucede cuando el valor de la construcción de un item i + 1 aparece
-// antes que el tipo de adquisición de i.
-// Esto sucedía con, por ejemplo, el immueble con padrón 9412 de Oscar González
-// Daher del 2016.
-func getRealState2(opts *stateOpts, line string) *declaration.RealState {
-	switch opts.counter {
-	case 0:
-		opts.state.Importe = stringToInt64(line)
-		break
-	case 1:
-		opts.previous.TipoAdquisicion = line
-		break
-	case 2:
-		opts.state.Pais = line
-		break
-	case 3:
-		opts.state.Padron = line
-		break
-	case 4:
-		// Usos que empiezan con "EXPLOTACION" tienen dos líneas.
-		if line == "EXPLOTACION" || line == "TERRENO SIN" {
-			opts.scanner.Scan()
-			nextLine := opts.scanner.Text()
-			opts.state.Uso = line + " " + nextLine
-			break
-		}
-
-		opts.state.Uso = line
-		break
-	case 5:
-		opts.state.Distrito = line
-		break
-	case 6:
-		value, _ := strconv.ParseInt(line, 10, 64)
-		opts.state.SuperficieTerreno = value
-		break
-	case 7:
-		opts.state.ValorTerreno = stringToInt64(line)
-		break
-	case 8:
-		opts.state.Adquisicion = stringToYear(line)
-		break
-	case 9:
-		value, _ := strconv.ParseInt(line, 10, 64)
-		opts.state.SuperficieConstruccion = value
-		break
-	case 10:
-		opts.next = nil
-		opts.state.TipoAdquisicion = line
-		opts.typ = 1
-		return opts.state
+func getState1(values [11]string) []*declaration.RealState {
+	return []*declaration.RealState{
+		{
+			Pais:                   values[0],
+			Padron:                 values[1],
+			Uso:                    values[2],
+			Distrito:               values[3],
+			SuperficieTerreno:      stringToInt64(values[4]),
+			ValorTerreno:           stringToInt64(values[5]),
+			Adquisicion:            stringToYear(values[6]),
+			SuperficieConstruccion: stringToInt64(values[7]),
+			ValorConstruccion:      stringToInt64(values[8]),
+			Importe:                stringToInt64(values[9]),
+			TipoAdquisicion:        values[10],
+		},
 	}
-
-	return nil
 }
 
-// Este es el caso en el que el valor del terreno de i+1 aparece inmediatamente
-// después del valor del terreno de i.
-// Esto sucedía con, por ejemplo, el immueble con padrón 27-0026.24 de Oscar González
-// Daher del 2016.
-func getRealState3(opts *stateOpts, line string) *declaration.RealState {
-	switch opts.counter {
-	case 0:
-		opts.previous.TipoAdquisicion = line
-	case 1:
-		opts.state.Pais = line
-		break
-	case 2:
-		opts.state.Padron = line
-		break
-	case 3:
-		// Usos que empiezan con "EXPLOTACION" tienen dos líneas.
-		if line == "EXPLOTACION" || line == "TERRENO SIN" {
-			opts.scanner.Scan()
-			nextLine := opts.scanner.Text()
-			opts.state.Uso = line + " " + nextLine
-			break
-		}
-
-		opts.state.Uso = line
-		break
-	case 4:
-		opts.state.Distrito = line
-		break
-	case 5:
-		value, _ := strconv.ParseInt(line, 10, 64)
-		opts.state.SuperficieTerreno = value
-		break
-	case 6:
-		opts.state.ValorTerreno = stringToInt64(line)
-		break
-	case 7:
-		value, _ := strconv.ParseInt(line, 10, 64)
-		opts.state.SuperficieConstruccion = value
-		break
-	case 8:
-		opts.state.ValorConstruccion = stringToInt64(line)
-		break
-	case 9:
-		opts.state.Importe = stringToInt64(line)
-	case 10:
-		opts.next = nil
-		opts.state.TipoAdquisicion = line
-		opts.typ = 1
-		return opts.state
+func getState2(values [11]string) []*declaration.RealState {
+	return []*declaration.RealState{
+		{
+			Padron:                 values[0],
+			Uso:                    values[1],
+			SuperficieTerreno:      stringToInt64(values[2]),
+			ValorTerreno:           stringToInt64(values[3]),
+			Pais:                   values[4],
+			Distrito:               values[5],
+			Adquisicion:            stringToYear(values[6]),
+			SuperficieConstruccion: stringToInt64(values[7]),
+			ValorConstruccion:      stringToInt64(values[8]),
+			Importe:                stringToInt64(values[9]),
+			TipoAdquisicion:        values[10],
+		},
 	}
-
-	return nil
 }
 
-// Este es el caso cuando el el padrón y el uso aparecen antes que el pais.
-// Esto sucece, por ejemplo, en la declaración de Juan Eudes Afara Maciel del
-// 2014, primer item en página 4.
-// También: Blas Lanzoni 2014, padrón 27-0285-02
-func getRealState4(opts *stateOpts, line string) *declaration.RealState {
-	switch opts.counter {
-	case 0:
-		// En algunos casos, el Padrón es extraído antes que el país
-		// Ejemplo: Blas Lanzoni 2014, padrón 27-0285-04
-		if !isCountry(opts.state.Pais) {
-			opts.state.Padron = opts.state.Pais
-		}
-
-		// Usos que empiezan con "EXPLOTACION" tienen dos líneas.
-		if line == "EXPLOTACION" || line == "TERRENO SIN" {
-			opts.scanner.Scan()
-			nextLine := opts.scanner.Text()
-			opts.state.Uso = line + " " + nextLine
-			break
-		}
-		opts.state.Uso = line
-		break
-	case 1:
-		// En algunos casos, el Padrón es extraído antes que el país
-		// Ejemplo: Blas Lanzoni 2014, padrón 27-0285-04
-		if opts.state.Padron == "" {
-			opts.state.Padron = line
-			break
-		}
-		opts.state.Pais = line
-		break
-	case 2:
-		// Esto nos lleva al 5 caso.
-		// Ver comentario en getRealState5.
-		if isNumber(line) {
-			opts.state.SuperficieTerreno = stringToInt64(opts.state.Pais)
-			opts.state.ValorTerreno = stringToInt64(line)
-			opts.typ = 5
-			break
-		}
-		opts.state.Distrito = line
-		break
-	case 3:
-		value, _ := strconv.ParseInt(line, 10, 64)
-		opts.state.SuperficieTerreno = value
-		break
-	case 4:
-		opts.state.ValorTerreno = stringToInt64(line)
-		break
-	case 5:
-		opts.state.Adquisicion = stringToYear(line)
-		break
-	case 6:
-		value, _ := strconv.ParseInt(line, 10, 64)
-		opts.state.SuperficieConstruccion = value
-		break
-	case 7:
-		opts.state.ValorConstruccion = stringToInt64(line)
-		break
-	case 8:
-		opts.state.Importe = stringToInt64(line)
-		break
-	case 9:
-		opts.typ = 1
-		opts.state.TipoAdquisicion = line
-
-		return opts.state
+func getState3(values [11]string) []*declaration.RealState {
+	return []*declaration.RealState{
+		{
+			Padron:                 values[0],
+			Uso:                    values[1],
+			Pais:                   values[2],
+			Distrito:               values[3],
+			SuperficieTerreno:      stringToInt64(values[4]),
+			ValorTerreno:           stringToInt64(values[5]),
+			Adquisicion:            stringToYear(values[6]),
+			SuperficieConstruccion: stringToInt64(values[7]),
+			ValorConstruccion:      stringToInt64(values[8]),
+			Importe:                stringToInt64(values[9]),
+			TipoAdquisicion:        values[10],
+		},
 	}
-
-	return nil
 }
 
-// Este es el caso en el que el padrón, uso, superficie y valor del terreno
-// aparecen antes del país.
-// Esto sucede, por ejemplo, Blas Lanzoni 2014, padrón 27-0285-02.
-func getRealState5(opts *stateOpts, line string) *declaration.RealState {
-	switch opts.counter {
-	case 3:
-		opts.state.Pais = line
-		break
-	case 4:
-		opts.state.Distrito = line
-		break
-	case 5:
-		opts.state.Adquisicion = stringToYear(line)
-		break
-	case 6:
-		opts.state.SuperficieConstruccion = stringToInt64(line)
-		break
-	case 7:
-		opts.state.ValorConstruccion = stringToInt64(line)
-		break
-	case 8:
-		opts.state.Importe = stringToInt64(line)
-		break
-	case 9:
-		opts.state.TipoAdquisicion = line
-		opts.typ = 1
-		return opts.state
+func getState4(values [11]string, nextImporte string, scanner *bufio.Scanner) []*declaration.RealState {
+	state1 := &declaration.RealState{
+		Pais:                   values[0],
+		Padron:                 values[1],
+		Uso:                    values[2],
+		Distrito:               values[3],
+		SuperficieTerreno:      stringToInt64(values[4]),
+		ValorTerreno:           stringToInt64(values[5]),
+		Adquisicion:            stringToYear(values[6]),
+		SuperficieConstruccion: stringToInt64(values[7]),
+		ValorConstruccion:      stringToInt64(values[8]),
+		Importe:                stringToInt64(values[9]),
+		// TipoAdquisicion is the 13th value.
 	}
-	return nil
+
+	// Skip the next item number.
+	stateItemNumber++
+	skipState[len(skipState)-1] = strconv.Itoa(stateItemNumber)
+
+	// Retrieve the 10 values missing from the next item.
+	need := 10
+	otherValues := [10]string{}
+	for need > 0 {
+		line, _ := getStateLine(scanner)
+		otherValues[10-need] = line
+		need--
+	}
+
+	// 11 regular values + 1 extra value. The type is in the 13th value, so index 0.
+	state1.TipoAdquisicion = otherValues[0]
+
+	state2 := &declaration.RealState{
+		ValorConstruccion:      stringToInt64(values[10]),
+		Importe:                stringToInt64(nextImporte),
+		Pais:                   otherValues[1],
+		Padron:                 otherValues[2],
+		Uso:                    otherValues[3],
+		Distrito:               otherValues[4],
+		SuperficieTerreno:      stringToInt64(otherValues[5]),
+		ValorTerreno:           stringToInt64(otherValues[6]),
+		Adquisicion:            stringToYear(otherValues[7]),
+		SuperficieConstruccion: stringToInt64(otherValues[8]),
+		TipoAdquisicion:        otherValues[9],
+	}
+
+	return []*declaration.RealState{state1, state2}
+}
+
+func getState5(values [11]string, tipoAdq string, scanner *bufio.Scanner) []*declaration.RealState {
+	state1 := &declaration.RealState{
+		Pais:              values[0],
+		Padron:            values[1],
+		Uso:               values[2],
+		Distrito:          values[3],
+		SuperficieTerreno: stringToInt64(values[4]),
+		ValorTerreno:      stringToInt64(values[5]),
+		Adquisicion:       stringToYear(values[6]),
+		// Adquisicion of the next item is values[7]
+		SuperficieConstruccion: stringToInt64(values[8]),
+		ValorConstruccion:      stringToInt64(values[9]),
+		Importe:                stringToInt64(values[10]),
+		TipoAdquisicion:        tipoAdq,
+	}
+
+	// Skip the next item number.
+	stateItemNumber++
+	skipState[len(skipState)-1] = strconv.Itoa(stateItemNumber)
+
+	// Retrieve the 10 values missing from the next item.
+	need := 10
+	otherValues := [10]string{}
+	for need > 0 {
+		line, _ := getStateLine(scanner)
+		otherValues[10-need] = line
+		need--
+	}
+
+	state2 := &declaration.RealState{
+		Adquisicion:            stringToYear(values[7]),
+		Pais:                   otherValues[0],
+		Padron:                 otherValues[1],
+		Uso:                    otherValues[2],
+		Distrito:               otherValues[3],
+		SuperficieTerreno:      stringToInt64(otherValues[4]),
+		ValorTerreno:           stringToInt64(otherValues[5]),
+		SuperficieConstruccion: stringToInt64(otherValues[6]),
+		ValorConstruccion:      stringToInt64(otherValues[7]),
+		Importe:                stringToInt64(otherValues[8]),
+		TipoAdquisicion:        otherValues[9],
+	}
+
+	return []*declaration.RealState{state1, state2}
+}
+
+func getStateLine(scanner *bufio.Scanner) (line string, nextPage bool) {
+	for scanner.Scan() {
+		line = scanner.Text()
+
+		// Stop looking for real state when this is found.
+		if line == "TOTAL INMUEBLES:" {
+			totalInState = getTotalInCategory(scanner)
+
+			// Next page or end.
+			scanner = moveUntil(scanner, "Nº FINCA", true)
+			line = scanner.Text()
+			nextPage = true
+
+			stateItemNumber = 1
+			skipState[len(skipState)-1] = strconv.Itoa(stateItemNumber)
+		}
+
+		if contains(stateTwoLines, line) {
+			nextLine, _ := getStateLine(scanner)
+			line += " " + nextLine
+		}
+
+		if strings.Contains(line, "OBS:") || strings.Contains(line, "RECEPCIONADO EL:") {
+			continue
+		}
+		if isDate(line) || isBarCode(line) {
+			continue
+		}
+		if line == "" || contains(skipState, line) {
+			continue
+		}
+
+		return line, nextPage
+	}
+
+	return "", false
 }
 
 func addRealState(states []*declaration.RealState) int64 {
