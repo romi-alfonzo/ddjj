@@ -26,6 +26,45 @@ type Declaration struct {
 	Debts []*Debt
 }
 
+// Net returns the patrimony's net value.
+func (d *Declaration) Net() int64 {
+	var debts int64
+	for _, v := range d.Debts {
+		debts += v.Saldo
+	}
+
+	return d.AddAssets() - debts
+}
+
+// AddAssets adds all the assets.
+func (d *Declaration) AddAssets() int64 {
+	var total int64
+
+	for _, v := range d.Deposits {
+		total += v.Importe
+	}
+	for _, v := range d.Debtors {
+		total += v.Importe
+	}
+	for _, v := range d.RealStates {
+		total += v.Importe
+	}
+	for _, v := range d.Vehicles {
+		total += v.Importe
+	}
+	for _, v := range d.Agricultural {
+		total += v.Importe
+	}
+	for _, v := range d.Furniture {
+		total += v.Importe
+	}
+	for _, v := range d.OtherAssets {
+		total += v.Importe
+	}
+
+	return total
+}
+
 // Deposit describes money at a financial institution.
 type Deposit struct {
 	TipoEntidad string

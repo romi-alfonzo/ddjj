@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"ddjj/parser/declaration"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var totalDebt int64
@@ -24,9 +25,9 @@ var skipDebt = []string{
 }
 
 // Debts returns money the official owes.
-func Debts(scanner *bufio.Scanner) []*declaration.Debt {
+func Debts(scanner *bufio.Scanner) ([]*declaration.Debt, error) {
 
-	scanner = moveUntil(scanner, "2.1 TIPOS DE DEUDAS", true)
+	scanner = MoveUntil(scanner, "2.1 TIPOS DE DEUDAS", true)
 	var debts []*declaration.Debt
 
 	values := [6]string{}
@@ -65,10 +66,10 @@ func Debts(scanner *bufio.Scanner) []*declaration.Debt {
 		for _, debt := range debts {
 			fmt.Println(debt)
 		}
-		log.Fatal("The amounts in debts do not match")
+		return nil, errors.New("The amount in debts do not match")
 	}
 
-	return debts
+	return debts, nil
 }
 
 func getDebt(values [6]string) *declaration.Debt {
@@ -91,7 +92,7 @@ func getDebtLine(scanner *bufio.Scanner) (line string, nextPage bool) {
 			totalDebt = getTotalInCategory(scanner)
 
 			// Next page or end.
-			scanner = moveUntil(scanner, "TIPO DEUDA", true)
+			scanner = MoveUntil(scanner, "TIPO DEUDA", true)
 			line = scanner.Text()
 			nextPage = true
 

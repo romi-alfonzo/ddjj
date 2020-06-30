@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
-func moveUntil(scanner *bufio.Scanner, search string, exact bool) *bufio.Scanner {
+var countries = map[string]bool{}
+
+// MoveUntil finds a word and stops the scan there.
+func MoveUntil(scanner *bufio.Scanner, search string, exact bool) *bufio.Scanner {
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -75,6 +78,11 @@ func getTotalInCategory(scanner *bufio.Scanner) int64 {
 }
 
 func stringToInt64(line string) int64 {
+	return StringToInt64(line)
+}
+
+// StringToInt64 parses a string and make it an int64.
+func StringToInt64(line string) int64 {
 	value := strings.ReplaceAll(line, ".", "")
 	i, _ := strconv.ParseInt(value, 10, 64)
 
@@ -119,6 +127,11 @@ func isNumber(line string) bool {
 }
 
 func isCountry(line string) bool {
+
+	if _, ok := countries[line]; ok {
+		return true
+	}
+
 	resp, err := http.Get("https://restcountries.eu/rest/v2/name/" + line)
 
 	if err != nil {
@@ -130,6 +143,8 @@ func isCountry(line string) bool {
 	if resp.StatusCode == 404 {
 		return false
 	}
+
+	countries[line] = true
 
 	return true
 }

@@ -5,10 +5,12 @@ import (
 	"ddjj/parser/declaration"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Vehicles returns the public official's vehicles.
-func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
+func Vehicles(scanner *bufio.Scanner) ([]*declaration.Vehicle, error) {
 	var skip = []string{
 		"#",
 		"TIPO VEHÍCULO",
@@ -20,7 +22,7 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 		"DATOS PROTEGIDOS",
 	}
 
-	scanner = moveUntil(scanner, "1.5 VEHÍCULOS", true)
+	scanner = MoveUntil(scanner, "1.5 VEHÍCULOS", true)
 
 	var vehicles []*declaration.Vehicle
 	opts := &vehicleOpts{
@@ -30,16 +32,16 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 
 	index := 1
 	skip = append(skip, strconv.Itoa(index))
-	//var total int64
+	var total int64
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Stop looking for deposits in the page when this is found.
 		if line == "TOTAL VEHÍCULOS:" {
-			//total = getTotalInCategory(scanner)
+			total = getTotalInCategory(scanner)
 
 			// Next page or end.
-			scanner = moveUntil(scanner, "TIPO VEHÍCULO", true)
+			scanner = MoveUntil(scanner, "TIPO VEHÍCULO", true)
 			line = scanner.Text()
 			if line == "" {
 				break
@@ -114,12 +116,12 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 		opts.counter++
 	}
 
-	/*totalVehicles := addVehicles(vehicles)
+	totalVehicles := addVehicles(vehicles)
 	if totalVehicles != total {
-		log.Fatal("Vehicles do not match")
-	}*/
+		return nil, errors.New("vehicles do not match")
+	}
 
-	return vehicles
+	return vehicles, nil
 }
 
 type vehicleOpts struct {

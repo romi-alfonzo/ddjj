@@ -3,22 +3,66 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
-	"os"
+	"net/http"
+	"strings"
+
+	"code.sajari.com/docconv"
+	"github.com/joho/godotenv"
+	"github.com/pkg/errors"
 
 	"ddjj/parser/declaration"
 	"ddjj/parser/extract"
 )
 
-func main() {
-	file := os.Args[1]
-	data, err := os.Open(file)
+func upload(w http.ResponseWriter, req *http.Request) {
+	// 2 MB
+	req.ParseMultipartForm(2 << 20)
+
+	// in your case file would be fileupload
+	file, header, err := req.FormFile("file")
 	if err != nil {
-		log.Fatal("Failed to open file")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	fmt.Printf("File name %s\n", header.Filename)
+
+	err = extractPDF(file)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "No se pudo procesar el documento")
+
+		fmt.Printf("Failed to process file %s\n", header.Filename)
+		return
+	}
+
+	fmt.Fprintf(w, "Documento procesado correctamente")
+}
+
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	http.HandleFunc("/upload", upload)
+
+	log.Println("Listening on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func extractPDF(file io.Reader) error {
+	res, err := docconv.Convert(file, "application/pdf", true)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Basic Info.
-	scanner := bufio.NewScanner(data)
+	scanner := bufio.NewScanner(strings.NewReader(res.Body))
 	d := &declaration.Declaration{
 		Date:        extract.Date(scanner),
 		Cedula:      extract.Cedula(scanner),
@@ -29,110 +73,90 @@ func main() {
 	}
 
 	// Deposits.
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	d.Deposits = extract.Deposits(scanner)
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.Deposits, err = extract.Deposits(scanner)
+	if err != nil {
+		return errors.Wrap(err, "failed when extracting deposits")
+	}
 
 	// Debtors.
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	d.Debtors = extract.Debtors(scanner)
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.Debtors, err = extract.Debtors(scanner)
+	if err != nil {
+		return errors.Wrap(err, "failed when extracting debtors")
+	}
 
 	// Real state.
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	d.RealStates = extract.RealStates(scanner)
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.RealStates, err = extract.RealStates(scanner)
+	if err != nil {
+		return errors.Wrap(err, "failed when extracting debtors")
+	}
 
 	// Vehicles
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	d.Vehicles = extract.Vehicles(scanner)
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.Vehicles, err = extract.Vehicles(scanner)
+	if err != nil {
+		return errors.Wrap(err, "failed when extracting vehicles")
+	}
 
 	// Agricultural activity
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	d.Agricultural = extract.Agricultural(scanner)
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.Agricultural, err = extract.Agricultural(scanner)
+	if err != nil {
+		return errors.Wrap(err, "failed when extracting agricultural activities")
+	}
 
 	// Furniture
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	d.Furniture = extract.Furniture(scanner)
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.Furniture, err = extract.Furniture(scanner)
+	if err != nil {
+		return errors.Wrap(err, "failed when extracting furniture")
+	}
 
 	// Other assets
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	d.OtherAssets = extract.Assets(scanner)
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.OtherAssets, err = extract.Assets(scanner)
+	if err != nil {
+		return errors.Wrap(err, "failed when extracting other assets")
+	}
 
 	// Debts
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	d.Debts = extract.Debts(scanner)
-
-	data, _ = os.Open(file)
-	defer data.Close()
-	scanner = bufio.NewScanner(data)
-	check(scanner, d)
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.Debts, err = extract.Debts(scanner)
+	if err != nil {
+		return errors.Wrap(err, "failed when extracting debts")
+	}
 
 	print(d)
+
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+
+	return check(scanner, d)
 }
 
 func print(d *declaration.Declaration) {
-	fmt.Printf("Fecha: %v\nCedula: %d\nName: %s\nInstitution: %s\nJob: %s\n",
+	fmt.Printf("Fecha: %v\nCedula: %d\nName: %s\nInstitution: %s\nJob: %s\n\n",
 		d.Date, d.Cedula, d.Nombre+" "+d.Apellido, d.Institucion, d.Funcion)
+}
 
-	/*fmt.Printf("\nDepósitos:\n")
-	for i, deposit := range d.Deposits {
-		fmt.Println(deposit)
-		if i > 1 {
-			fmt.Println("...")
-			break
-		}
+func check(scanner *bufio.Scanner, d *declaration.Declaration) error {
+	net := d.Net()
+	scanner = extract.MoveUntil(scanner, "PATRIMONIO NETO", true)
+
+	for i := 0; i < 6; i++ {
+		scanner.Scan()
 	}
 
-	fmt.Print("\nCuentas a cobrar:\n")
-	for i, debtor := range d.Debtors {
-		fmt.Println(debtor)
-		if i > 1 {
-			fmt.Println("...")
-			break
-		}
-	}*/
+	line := scanner.Text()
+	if line == "" {
+		return errors.New("could not get net patrimony")
+	}
+	expected := extract.StringToInt64(line)
 
-	/*fmt.Print("\nInmuebles:\n")
-	for _, state := range d.RealStates {
-		fmt.Println(state)
-	}*/
+	if net != expected {
+		return errors.New("patrimony does not match")
+	}
 
-	/*fmt.Print("\nVehículos:\n")
-	for _, vehicle := range d.Vehicles {
-		fmt.Println(vehicle)
-	}*/
-
-	/*fmt.Print("\nActividad Agropecuaria:\n")
-	for _, activity := range d.Agricultural {
-		fmt.Println(activity)
-	}*/
-
-	/*fmt.Print("\nMuebles:\n")
-	for _, furnishing := range d.Furniture {
-		fmt.Println(furnishing)
-	}*/
-
-	/*fmt.Print("\nOtros activos:\n")
-	for _, asset := range d.OtherAssets {
-		fmt.Println(asset)
-	}*/
-
-	/*fmt.Print("\nDeudas:\n")
-	for _, debt := range d.Debts {
-		fmt.Println(debt)
-	}*/
+	return nil
 }

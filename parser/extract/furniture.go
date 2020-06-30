@@ -5,6 +5,8 @@ import (
 	"ddjj/parser/declaration"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var totalFurniture int64
@@ -18,9 +20,9 @@ var skipFurniture = []string{
 }
 
 // Furniture returns the furniture owned by the official.
-func Furniture(scanner *bufio.Scanner) []*declaration.Furniture {
+func Furniture(scanner *bufio.Scanner) ([]*declaration.Furniture, error) {
 
-	scanner = moveUntil(scanner, "1.8 MUEBLES", true)
+	scanner = MoveUntil(scanner, "1.8 MUEBLES", true)
 	var furniture []*declaration.Furniture
 
 	values := [2]string{}
@@ -54,12 +56,12 @@ func Furniture(scanner *bufio.Scanner) []*declaration.Furniture {
 		line, _ = getFurnitureLine(scanner)
 	}
 
-	/*total := addFurniture(furniture)
+	total := addFurniture(furniture)
 	if total != totalFurniture {
-		log.Fatal("The amounts in furniture do not match")
-	}*/
+		return nil, errors.New("furniture do not match")
+	}
 
-	return furniture
+	return furniture, nil
 }
 
 func getFurnishing(values [2]string) *declaration.Furniture {
@@ -78,7 +80,7 @@ func getFurnitureLine(scanner *bufio.Scanner) (line string, nextPage bool) {
 			totalFurniture = getTotalInCategory(scanner)
 
 			// Next page or end.
-			scanner = moveUntil(scanner, "TIPO MUEBLES", true)
+			scanner = MoveUntil(scanner, "TIPO MUEBLES", true)
 			line = scanner.Text()
 			nextPage = true
 

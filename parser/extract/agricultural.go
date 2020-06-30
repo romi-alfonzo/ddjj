@@ -5,10 +5,12 @@ import (
 	"ddjj/parser/declaration"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Agricultural returns the agricultural activity of the official.
-func Agricultural(scanner *bufio.Scanner) []*declaration.Agricultural {
+func Agricultural(scanner *bufio.Scanner) ([]*declaration.Agricultural, error) {
 	var skip = []string{
 		"#",
 		"TIPO ACTIVIDAD",
@@ -19,7 +21,7 @@ func Agricultural(scanner *bufio.Scanner) []*declaration.Agricultural {
 		"IMPORTE",
 	}
 
-	scanner = moveUntil(scanner, "1.7 ACTIVIDAD AGROPECUARIA", true)
+	scanner = MoveUntil(scanner, "1.7 ACTIVIDAD AGROPECUARIA", true)
 
 	var activities []*declaration.Agricultural
 	opts := &activityOpts{
@@ -29,16 +31,16 @@ func Agricultural(scanner *bufio.Scanner) []*declaration.Agricultural {
 
 	index := 1
 	skip = append(skip, strconv.Itoa(index))
-	//var total int64
+	var total int64
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Stop looking for debtors when this is found.
 		if line == "TOTAL ACTIVIDAD AGROPECUARIA:" {
-			//total = getTotalInCategory(scanner)
+			total = getTotalInCategory(scanner)
 
 			// Next page or end.
-			scanner = moveUntil(scanner, "TIPO ACTIVIDAD", true)
+			scanner = MoveUntil(scanner, "TIPO ACTIVIDAD", true)
 			line = scanner.Text()
 			if line == "" {
 				break
@@ -72,12 +74,12 @@ func Agricultural(scanner *bufio.Scanner) []*declaration.Agricultural {
 		opts.counter++
 	}
 
-	/*totalAgricultural := addAgricultural(activities)
+	totalAgricultural := addAgricultural(activities)
 	if totalAgricultural != total {
-		fmt.Print("The total in agricultural activity amount could not be verified.\n\n")
-	}*/
+		return nil, errors.New("agricultural activities do not match")
+	}
 
-	return activities
+	return activities, nil
 }
 
 type activityOpts struct {

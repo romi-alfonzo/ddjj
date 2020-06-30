@@ -3,12 +3,15 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Debtors returns the debts people have with the official.
-func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
+func Debtors(scanner *bufio.Scanner) ([]*declaration.Debtor, error) {
 	var skip = []string{
 		"#",
 		"NOMBRE DEL DEUDOR",
@@ -17,7 +20,7 @@ func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
 		"IMPORTE",
 	}
 
-	scanner = moveUntil(scanner, "1.3 CUENTAS A COBRAR", true)
+	scanner = MoveUntil(scanner, "1.3 CUENTAS A COBRAR", true)
 
 	var debtors []*declaration.Debtor
 	opts := &debtorOpts{
@@ -27,16 +30,16 @@ func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
 
 	index := 1
 	skip = append(skip, strconv.Itoa(index))
-	//var total int64
+	var total int64
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Stop looking for debtors when this is found.
 		if line == "TOTAL CUENTAS POR COBRAR:" {
-			//total = getTotalInCategory(scanner)
+			total = getTotalInCategory(scanner)
 
 			// Next page or end.
-			scanner = moveUntil(scanner, "NOMBRE DEL DEUDOR", true)
+			scanner = MoveUntil(scanner, "NOMBRE DEL DEUDOR", true)
 			line = scanner.Text()
 			if line == "" {
 				break
@@ -70,17 +73,17 @@ func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
 		opts.counter++
 	}
 
-	/*totalDebtors := addDebtors(debtors)
+	totalDebtors := addDebtors(debtors)
 	if total > 0 {
 		if totalDebtors != total {
-			log.Fatal("The amounts that are owned to the official do not match")
+			return nil, errors.New("debtors do not match")
 		}
 	} else {
 		// In some cases, the total could not be retrieved. Ignore those for now.
 		fmt.Print("The total in debtors amount could not be verified.\n\n")
-	}*/
+	}
 
-	return debtors
+	return debtors, nil
 }
 
 type debtorOpts struct {

@@ -5,10 +5,12 @@ import (
 	"ddjj/parser/declaration"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Deposits returns the deposits at financial institutions.
-func Deposits(scanner *bufio.Scanner) []*declaration.Deposit {
+func Deposits(scanner *bufio.Scanner) ([]*declaration.Deposit, error) {
 	var skip = []string{
 		"#",
 		"TIPO ENTIDAD",
@@ -20,7 +22,7 @@ func Deposits(scanner *bufio.Scanner) []*declaration.Deposit {
 		"DATOS PROTEGIDOS",
 	}
 
-	scanner = moveUntil(scanner, "1.2 DEPÓSITOS", true)
+	scanner = MoveUntil(scanner, "1.2 DEPÓSITOS", true)
 
 	var deposits []*declaration.Deposit
 	opts := &depositOpts{
@@ -30,16 +32,16 @@ func Deposits(scanner *bufio.Scanner) []*declaration.Deposit {
 
 	index := 1
 	skip = append(skip, strconv.Itoa(index))
-	//var total int64
+	var total int64
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Stop looking for deposits in the page when this is found.
 		if line == "TOTAL DEPÓSITOS:" {
-			//total = getTotalInCategory(scanner)
+			total = getTotalInCategory(scanner)
 
 			// Next page or end.
-			scanner = moveUntil(scanner, "TIPO ENTIDAD", true)
+			scanner = MoveUntil(scanner, "TIPO ENTIDAD", true)
 			line = scanner.Text()
 			if line == "" {
 				break
@@ -69,12 +71,12 @@ func Deposits(scanner *bufio.Scanner) []*declaration.Deposit {
 		opts.counter++
 	}
 
-	/*totalDeposits := addDeposits(deposits)
+	totalDeposits := addDeposits(deposits)
 	if totalDeposits != total {
-		log.Fatal("Deposits do not match")
-	}*/
+		return nil, errors.New("deposits do not match")
+	}
 
-	return deposits
+	return deposits, nil
 }
 
 type depositOpts struct {

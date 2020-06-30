@@ -5,6 +5,8 @@ import (
 	"ddjj/parser/declaration"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var totalAssets int64
@@ -23,9 +25,9 @@ var skipAssets = []string{
 }
 
 // Assets returns other assets owned by the official.
-func Assets(scanner *bufio.Scanner) []*declaration.OtherAsset {
+func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 
-	scanner = moveUntil(scanner, "1.9 OTROS ACTIVOS", true)
+	scanner = MoveUntil(scanner, "1.9 OTROS ACTIVOS", true)
 	var assets []*declaration.OtherAsset
 
 	values := [7]string{}
@@ -59,12 +61,12 @@ func Assets(scanner *bufio.Scanner) []*declaration.OtherAsset {
 		line, _ = getAssetLine(scanner)
 	}
 
-	/*total := addAssets(assets)
+	total := addAssets(assets)
 	if total != totalAssets {
-		log.Fatal("The amounts in other assets do not match")
-	}*/
+		return nil, errors.New("other assets do not match")
+	}
 
-	return assets
+	return assets, nil
 }
 
 func getAsset(values [7]string) *declaration.OtherAsset {
@@ -88,7 +90,7 @@ func getAssetLine(scanner *bufio.Scanner) (line string, nextPage bool) {
 			totalAssets = getTotalInCategory(scanner)
 
 			// Next page or end.
-			scanner = moveUntil(scanner, "TIPO MUEBLES", true)
+			scanner = MoveUntil(scanner, "TIPO MUEBLES", true)
 			line = scanner.Text()
 			nextPage = true
 

@@ -5,6 +5,8 @@ import (
 	"ddjj/parser/declaration"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var stateTwoLines = []string{
@@ -37,9 +39,9 @@ var skipState = []string{
 }
 
 // RealStates returns the real states owned by the official.
-func RealStates(scanner *bufio.Scanner) []*declaration.RealState {
+func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
 
-	scanner = moveUntil(scanner, "1.4 INMUEBLES", true)
+	scanner = MoveUntil(scanner, "1.4 INMUEBLES", true)
 	var states []*declaration.RealState
 
 	values := [11]string{}
@@ -76,12 +78,12 @@ func RealStates(scanner *bufio.Scanner) []*declaration.RealState {
 		}*/
 	}
 
-	/*total := addRealState(states)
+	total := addRealState(states)
 	if total != totalState {
-		log.Fatal("The amounts in real state do not match")
-	}*/
+		return nil, errors.New("real states do not match")
+	}
 
-	return states
+	return states, nil
 }
 
 func getState(scanner *bufio.Scanner, values [11]string) []*declaration.RealState {
@@ -269,7 +271,7 @@ func getStateLine(scanner *bufio.Scanner) (line string, nextPage bool) {
 			totalState = getTotalInCategory(scanner)
 
 			// Next page or end.
-			scanner = moveUntil(scanner, "Nº FINCA", true)
+			scanner = MoveUntil(scanner, "Nº FINCA", true)
 			line = scanner.Text()
 			nextPage = true
 
