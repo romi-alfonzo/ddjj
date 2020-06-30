@@ -22,6 +22,8 @@ type Declaration struct {
 	Agricultural []*Agricultural
 	Furniture    []*Furniture
 	OtherAssets  []*OtherAsset
+
+	Debts []*Debt
 }
 
 // Deposit describes money at a financial institution.
@@ -103,17 +105,6 @@ type Debt struct {
 	Saldo   int64
 }
 
-func (a *OtherAsset) String() string {
-	return fmt.Sprintf("Descripcion: %s\n"+
-		"Empresa: %s\n"+
-		"RUC: %s\n"+
-		"Pais: %s\n"+
-		"Cantidad: %d\n"+
-		"Precio: %d\n"+
-		"Importe: %d\n",
-		a.Descripcion, a.Empresa, a.RUC, a.Pais, a.Cantidad, a.Precio, a.Importe)
-}
-
 func (d *Deposit) String() string {
 	return fmt.Sprintf("Tipo Entidad: %s\n"+
 		"Entidad: %s\n"+
@@ -170,4 +161,25 @@ func (a *Agricultural) String() string {
 
 func (f *Furniture) String() string {
 	return fmt.Sprintf("Tipo: %s\nImporte:%d\n", f.Tipo, f.Importe)
+}
+
+func (a *OtherAsset) String() string {
+	return fmt.Sprintf("Descripcion: %s\n"+
+		"Empresa: %s\n"+
+		"RUC: %s\n"+
+		"Pais: %s\n"+
+		"Cantidad: %d\n"+
+		"Precio: %d\n"+
+		"Importe: %d\n",
+		a.Descripcion, a.Empresa, a.RUC, a.Pais, a.Cantidad, a.Precio, a.Importe)
+}
+
+func (d *Debt) String() string {
+	return fmt.Sprintf("Tipo: %s\n"+
+		"Empresa: %s\n"+
+		"Plazo: %d\n"+
+		"Cuota: %d\n"+
+		"Total: %d\n"+
+		"Saldo: %d\n",
+		d.Tipo, d.Empresa, d.Plazo, d.Cuota, d.Total, d.Saldo)
 }

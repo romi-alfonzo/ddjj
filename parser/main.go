@@ -70,6 +70,17 @@ func main() {
 	scanner = bufio.NewScanner(data)
 	d.OtherAssets = extract.Assets(scanner)
 
+	// Debts
+	data, _ = os.Open(file)
+	defer data.Close()
+	scanner = bufio.NewScanner(data)
+	d.Debts = extract.Debts(scanner)
+
+	data, _ = os.Open(file)
+	defer data.Close()
+	scanner = bufio.NewScanner(data)
+	check(scanner, d)
+
 	print(d)
 }
 
@@ -118,5 +129,10 @@ func print(d *declaration.Declaration) {
 	/*fmt.Print("\nOtros activos:\n")
 	for _, asset := range d.OtherAssets {
 		fmt.Println(asset)
+	}*/
+
+	/*fmt.Print("\nDeudas:\n")
+	for _, debt := range d.Debts {
+		fmt.Println(debt)
 	}*/
 }
