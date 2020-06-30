@@ -3,8 +3,6 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
-	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -29,13 +27,13 @@ func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
 
 	index := 1
 	skip = append(skip, strconv.Itoa(index))
-	var total int64
+	//var total int64
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Stop looking for debtors when this is found.
 		if line == "TOTAL CUENTAS POR COBRAR:" {
-			total = getTotalInCategory(scanner)
+			//total = getTotalInCategory(scanner)
 
 			// Next page or end.
 			scanner = moveUntil(scanner, "NOMBRE DEL DEUDOR", true)
@@ -72,7 +70,7 @@ func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
 		opts.counter++
 	}
 
-	totalDebtors := addDebtors(debtors)
+	/*totalDebtors := addDebtors(debtors)
 	if total > 0 {
 		if totalDebtors != total {
 			log.Fatal("The amounts that are owned to the official do not match")
@@ -80,7 +78,7 @@ func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
 	} else {
 		// In some cases, the total could not be retrieved. Ignore those for now.
 		fmt.Print("The total in debtors amount could not be verified.\n\n")
-	}
+	}*/
 
 	return debtors
 }

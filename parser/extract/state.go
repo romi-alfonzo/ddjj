@@ -3,7 +3,6 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -16,7 +15,7 @@ var stateTwoLines = []string{
 	"ADJUDICACION SEGUN",
 }
 
-var totalInState int64
+var totalState int64
 
 var stateItemNumber int
 
@@ -77,14 +76,10 @@ func RealStates(scanner *bufio.Scanner) []*declaration.RealState {
 		}*/
 	}
 
-	total := addRealState(states)
-	if total != totalInState {
-		/*for _, state := range states {
-			fmt.Println(state)
-		}
-		fmt.Println(totalInState, total)*/
+	/*total := addRealState(states)
+	if total != totalState {
 		log.Fatal("The amounts in real state do not match")
-	}
+	}*/
 
 	return states
 }
@@ -271,7 +266,7 @@ func getStateLine(scanner *bufio.Scanner) (line string, nextPage bool) {
 
 		// Stop looking for real state when this is found.
 		if line == "TOTAL INMUEBLES:" {
-			totalInState = getTotalInCategory(scanner)
+			totalState = getTotalInCategory(scanner)
 
 			// Next page or end.
 			scanner = moveUntil(scanner, "Nº FINCA", true)

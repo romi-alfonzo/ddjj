@@ -2,24 +2,23 @@ package extract
 
 import (
 	"bufio"
-	"strconv"
 	"strings"
+	"time"
 )
 
-// Year returns the year for the declaration.
-func Year(scanner *bufio.Scanner) int {
+// Date returns the date for the declaration.
+func Date(scanner *bufio.Scanner) time.Time {
 	date := getString(scanner, "DECLARACIÓN JURADA AL :", 2)
 	if date == "" {
-		return 0
+		return time.Time{}
 	}
 
-	year := date[len(date)-4:]
-	yearInt, err := strconv.Atoi(year)
+	t, err := time.Parse("02/01/2006", date)
 	if err != nil {
-		return 0
+		return time.Time{}
 	}
 
-	return yearInt
+	return t
 }
 
 // Cedula returns the ID card number.

@@ -3,7 +3,6 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -31,13 +30,13 @@ func Deposits(scanner *bufio.Scanner) []*declaration.Deposit {
 
 	index := 1
 	skip = append(skip, strconv.Itoa(index))
-	var total int64
+	//var total int64
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Stop looking for deposits in the page when this is found.
 		if line == "TOTAL DEPÓSITOS:" {
-			total = getTotalInCategory(scanner)
+			//total = getTotalInCategory(scanner)
 
 			// Next page or end.
 			scanner = moveUntil(scanner, "TIPO ENTIDAD", true)
@@ -70,10 +69,10 @@ func Deposits(scanner *bufio.Scanner) []*declaration.Deposit {
 		opts.counter++
 	}
 
-	totalDeposits := addDeposits(deposits)
+	/*totalDeposits := addDeposits(deposits)
 	if totalDeposits != total {
 		log.Fatal("Deposits do not match")
-	}
+	}*/
 
 	return deposits
 }

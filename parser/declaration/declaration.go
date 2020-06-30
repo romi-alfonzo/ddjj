@@ -2,11 +2,12 @@ package declaration
 
 import (
 	"fmt"
+	"time"
 )
 
 // Declaration is the data on a public official's declaraion
 type Declaration struct {
-	Ano         int
+	Date        time.Time
 	Cedula      int
 	Nombre      string
 	Apellido    string
@@ -19,6 +20,8 @@ type Declaration struct {
 	RealStates   []*RealState
 	Vehicles     []*Vehicle
 	Agricultural []*Agricultural
+	Furniture    []*Furniture
+	OtherAssets  []*OtherAsset
 }
 
 // Deposit describes money at a financial institution.
@@ -73,6 +76,44 @@ type Agricultural struct {
 	Importe   int64
 }
 
+// Furniture is a furniture owned by the official.
+type Furniture struct {
+	Tipo    string
+	Importe int64
+}
+
+// OtherAsset is another asset not included in other fields.
+type OtherAsset struct {
+	Descripcion string
+	Empresa     string
+	RUC         string
+	Pais        string
+	Cantidad    int64
+	Precio      int64
+	Importe     int64
+}
+
+// Debt is money the official owes to others.
+type Debt struct {
+	Tipo    string
+	Empresa string
+	Plazo   int
+	Cuota   int64
+	Total   int64
+	Saldo   int64
+}
+
+func (a *OtherAsset) String() string {
+	return fmt.Sprintf("Descripcion: %s\n"+
+		"Empresa: %s\n"+
+		"RUC: %s\n"+
+		"Pais: %s\n"+
+		"Cantidad: %d\n"+
+		"Precio: %d\n"+
+		"Importe: %d\n",
+		a.Descripcion, a.Empresa, a.RUC, a.Pais, a.Cantidad, a.Precio, a.Importe)
+}
+
 func (d *Deposit) String() string {
 	return fmt.Sprintf("Tipo Entidad: %s\n"+
 		"Entidad: %s\n"+
@@ -125,4 +166,8 @@ func (a *Agricultural) String() string {
 		"Precio: %d\n"+
 		"Importe: %d\n",
 		a.Tipo, a.Ubicacion, a.Especie, a.Cantidad, a.Precio, a.Importe)
+}
+
+func (f *Furniture) String() string {
+	return fmt.Sprintf("Tipo: %s\nImporte:%d\n", f.Tipo, f.Importe)
 }

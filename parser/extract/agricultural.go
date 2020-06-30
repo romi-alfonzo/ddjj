@@ -3,7 +3,6 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -30,13 +29,13 @@ func Agricultural(scanner *bufio.Scanner) []*declaration.Agricultural {
 
 	index := 1
 	skip = append(skip, strconv.Itoa(index))
-	var total int64
+	//var total int64
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Stop looking for debtors when this is found.
 		if line == "TOTAL ACTIVIDAD AGROPECUARIA:" {
-			total = getTotalInCategory(scanner)
+			//total = getTotalInCategory(scanner)
 
 			// Next page or end.
 			scanner = moveUntil(scanner, "TIPO ACTIVIDAD", true)
@@ -73,10 +72,10 @@ func Agricultural(scanner *bufio.Scanner) []*declaration.Agricultural {
 		opts.counter++
 	}
 
-	totalDebtors := addAgricultural(activities)
-	if totalDebtors != total {
+	/*totalAgricultural := addAgricultural(activities)
+	if totalAgricultural != total {
 		fmt.Print("The total in agricultural activity amount could not be verified.\n\n")
-	}
+	}*/
 
 	return activities
 }

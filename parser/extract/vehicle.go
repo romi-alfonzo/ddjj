@@ -3,7 +3,6 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -31,13 +30,13 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 
 	index := 1
 	skip = append(skip, strconv.Itoa(index))
-	var total int64
+	//var total int64
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Stop looking for deposits in the page when this is found.
 		if line == "TOTAL VEHÍCULOS:" {
-			total = getTotalInCategory(scanner)
+			//total = getTotalInCategory(scanner)
 
 			// Next page or end.
 			scanner = moveUntil(scanner, "TIPO VEHÍCULO", true)
@@ -115,10 +114,10 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 		opts.counter++
 	}
 
-	totalDeposits := addVehicles(vehicles)
-	if totalDeposits != total {
+	/*totalVehicles := addVehicles(vehicles)
+	if totalVehicles != total {
 		log.Fatal("Vehicles do not match")
-	}
+	}*/
 
 	return vehicles
 }
