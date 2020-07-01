@@ -36,7 +36,7 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 	var assets []*declaration.OtherAsset
 
 	fmt.Println(skipAssets)
-	values, nextPage := getValues(scanner, 0, false)
+	values, nextPage := getAssetValues(scanner, 0, false)
 	for values[0] != "" {
 		asset := getAsset(scanner, values)
 		assets = append(assets, asset...)
@@ -49,7 +49,7 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 		// Also wants to skip item number
 		skipAssets[len(skipAssets)-1] = strconv.Itoa(assetsItemNumber)
 
-		values, nextPage = getValues(scanner, 0, false)
+		values, nextPage = getAssetValues(scanner, 0, false)
 	}
 
 	total := addAssets(assets)
@@ -60,7 +60,7 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 	return assets, nil
 }
 
-func getValues(scanner *bufio.Scanner, index int, remaining bool) (values [7]string, nextPage bool) {
+func getAssetValues(scanner *bufio.Scanner, index int, remaining bool) (values [7]string, nextPage bool) {
 	line, _ := getAssetLine(scanner)
 	for line != "" {
 
@@ -98,7 +98,7 @@ func getAsset(scanner *bufio.Scanner, values [7]string) []*declaration.OtherAsse
 
 		// values[6] is the descripcion in the second element.
 		tmp := values[6]
-		values, _ := getValues(scanner, 1, false)
+		values, _ := getAssetValues(scanner, 1, false)
 		values[0] = tmp
 
 		secondAsset := getAsset1(values)
@@ -107,7 +107,7 @@ func getAsset(scanner *bufio.Scanner, values [7]string) []*declaration.OtherAsse
 		assetsItemNumber++
 		skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
 
-		values, nextPage := getValues(scanner, 0, true)
+		values, nextPage := getAssetValues(scanner, 0, true)
 
 		counter := 0
 		for values[1] != "" || nextPage {
@@ -117,7 +117,7 @@ func getAsset(scanner *bufio.Scanner, values [7]string) []*declaration.OtherAsse
 			skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
 			counter++
 
-			values, nextPage = getValues(scanner, 0, true)
+			values, nextPage = getAssetValues(scanner, 0, true)
 		}
 
 		// The last value is the importe for the first item.
