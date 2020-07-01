@@ -3,6 +3,7 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -26,39 +27,29 @@ var skipAssets = []string{
 
 // Assets returns other assets owned by the official.
 func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
-
 	scanner = MoveUntil(scanner, "1.9 OTROS ACTIVOS", true)
-	var assets []*declaration.OtherAsset
-
-	values := [7]string{}
-	index := 0
-	assetsItemNumber = 1
 
 	// Also wants to skip item number
+	assetsItemNumber = 1
 	skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
 
-	line, _ := getAssetLine(scanner)
-	for line != "" {
+	var assets []*declaration.OtherAsset
 
-		values[index] = line
+	fmt.Println(skipAssets)
+	values, nextPage := getValues(scanner, 0, false)
+	for values[0] != "" {
+		asset := getAsset(scanner, values)
+		assets = append(assets, asset...)
 
-		// After reading all the possible values for a single item.
-		if index == 6 {
-			asset := getAsset(values)
-
-			assets = append(assets, asset)
-
-			// Skip the next item number.
+		if nextPage {
+			assetsItemNumber = 1
+		} else {
 			assetsItemNumber++
-			skipAssets[len(skipAssets)-1] = strconv.Itoa(assetsItemNumber)
-
-			index = -1
 		}
+		// Also wants to skip item number
+		skipAssets[len(skipAssets)-1] = strconv.Itoa(assetsItemNumber)
 
-		index++
-
-		//var nextPage bool
-		line, _ = getAssetLine(scanner)
+		values, nextPage = getValues(scanner, 0, false)
 	}
 
 	total := addAssets(assets)
@@ -69,7 +60,80 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 	return assets, nil
 }
 
-func getAsset(values [7]string) *declaration.OtherAsset {
+func getValues(scanner *bufio.Scanner, index int, remaining bool) (values [7]string, nextPage bool) {
+	line, _ := getAssetLine(scanner)
+	for line != "" {
+
+		values[index] = line
+
+		// After reading all the possible values for a single item.
+		if index == 6 {
+			return
+		}
+
+		index++
+
+		line, nextPage = getAssetLine(scanner)
+	}
+
+	if remaining {
+		return
+	}
+
+	return [7]string{}, false
+}
+
+func getAsset(scanner *bufio.Scanner, values [7]string) []*declaration.OtherAsset {
+
+	assets := []*declaration.OtherAsset{}
+
+	// En algunos casos, el importe del primer activo está al final de la lista
+	// de activos. Por ejemplo Juan Afara 2014
+	if !isNumber(values[6]) {
+		firstAsset := getAsset1(values)
+		assets = append(assets, firstAsset)
+
+		assetsItemNumber++
+		skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
+
+		// values[6] is the descripcion in the second element.
+		tmp := values[6]
+		values, _ := getValues(scanner, 1, false)
+		values[0] = tmp
+
+		secondAsset := getAsset1(values)
+		assets = append(assets, secondAsset)
+
+		assetsItemNumber++
+		skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
+
+		values, nextPage := getValues(scanner, 0, true)
+
+		counter := 0
+		for values[1] != "" || nextPage {
+			assets = append(assets, getAsset1(values))
+
+			assetsItemNumber++
+			skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
+			counter++
+
+			values, nextPage = getValues(scanner, 0, true)
+		}
+
+		// The last value is the importe for the first item.
+		firstAsset.Importe = stringToInt64(values[0])
+
+		// Restore skip assets to default state.
+		skipAssets = skipAssets[:len(skipAssets)-counter-3]
+		assetsItemNumber = 1
+
+		return assets
+	}
+
+	return append(assets, getAsset1(values))
+}
+
+func getAsset1(values [7]string) *declaration.OtherAsset {
 	return &declaration.OtherAsset{
 		Descripcion: values[0],
 		Empresa:     values[1],

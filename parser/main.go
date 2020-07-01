@@ -36,7 +36,7 @@ func upload(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "No se pudo procesar el documento")
 
-		fmt.Printf("Failed to process file %s\n", header.Filename)
+		fmt.Printf("Failed to process file %s: %s\n\n", header.Filename, err)
 		return
 	}
 

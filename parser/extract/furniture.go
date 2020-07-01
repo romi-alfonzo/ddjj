@@ -3,6 +3,7 @@ package extract
 import (
 	"bufio"
 	"ddjj/parser/declaration"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -22,7 +23,7 @@ var skipFurniture = []string{
 // Furniture returns the furniture owned by the official.
 func Furniture(scanner *bufio.Scanner) ([]*declaration.Furniture, error) {
 
-	scanner = MoveUntil(scanner, "1.8 MUEBLES", true)
+	scanner = MoveUntil(scanner, "TIPO MUEBLES", true)
 	var furniture []*declaration.Furniture
 
 	values := [2]string{}
@@ -58,6 +59,9 @@ func Furniture(scanner *bufio.Scanner) ([]*declaration.Furniture, error) {
 
 	total := addFurniture(furniture)
 	if total != totalFurniture {
+		for _, f := range furniture {
+			fmt.Println(f)
+		}
 		return nil, errors.New("furniture do not match")
 	}
 
