@@ -33,9 +33,10 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 	assetsItemNumber = 1
 	skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
 
+	fmt.Println(skipAssets)
+
 	var assets []*declaration.OtherAsset
 
-	fmt.Println(skipAssets)
 	values, nextPage := getAssetValues(scanner, 0, false)
 	for values[0] != "" {
 		asset := getAsset(scanner, values)
@@ -52,10 +53,15 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 		values, nextPage = getAssetValues(scanner, 0, false)
 	}
 
+	//log.Println(assets)
 	total := addAssets(assets)
 	if total != totalAssets {
 		return nil, errors.New("other assets do not match")
 	}
+
+	// Reset variables for next call.
+	totalAssets = 0
+	assetsItemNumber = 0
 
 	return assets, nil
 }
@@ -84,53 +90,13 @@ func getAssetValues(scanner *bufio.Scanner, index int, remaining bool) (values [
 }
 
 func getAsset(scanner *bufio.Scanner, values [7]string) []*declaration.OtherAsset {
-
-	assets := []*declaration.OtherAsset{}
-
 	// En algunos casos, el importe del primer activo está al final de la lista
 	// de activos. Por ejemplo Juan Afara 2014
 	if !isNumber(values[6]) {
-		firstAsset := getAsset1(values)
-		assets = append(assets, firstAsset)
-
-		assetsItemNumber++
-		skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
-
-		// values[6] is the descripcion in the second element.
-		tmp := values[6]
-		values, _ := getAssetValues(scanner, 1, false)
-		values[0] = tmp
-
-		secondAsset := getAsset1(values)
-		assets = append(assets, secondAsset)
-
-		assetsItemNumber++
-		skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
-
-		values, nextPage := getAssetValues(scanner, 0, true)
-
-		counter := 0
-		for values[1] != "" || nextPage {
-			assets = append(assets, getAsset1(values))
-
-			assetsItemNumber++
-			skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
-			counter++
-
-			values, nextPage = getAssetValues(scanner, 0, true)
-		}
-
-		// The last value is the importe for the first item.
-		firstAsset.Importe = stringToInt64(values[0])
-
-		// Restore skip assets to default state.
-		skipAssets = skipAssets[:len(skipAssets)-counter-3]
-		assetsItemNumber = 1
-
-		return assets
+		return getAsset2(scanner, values)
 	}
 
-	return append(assets, getAsset1(values))
+	return []*declaration.OtherAsset{getAsset1(values)}
 }
 
 func getAsset1(values [7]string) *declaration.OtherAsset {
@@ -143,6 +109,49 @@ func getAsset1(values [7]string) *declaration.OtherAsset {
 		Precio:      stringToInt64(values[5]),
 		Importe:     stringToInt64(values[6]),
 	}
+}
+
+func getAsset2(scanner *bufio.Scanner, values [7]string) []*declaration.OtherAsset {
+	assets := []*declaration.OtherAsset{}
+
+	firstAsset := getAsset1(values)
+	assets = append(assets, firstAsset)
+
+	assetsItemNumber++
+	skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
+
+	// values[6] is the descripcion in the second element.
+	tmp := values[6]
+	values, _ = getAssetValues(scanner, 1, false)
+	values[0] = tmp
+	secondAsset := getAsset1(values)
+	assets = append(assets, secondAsset)
+
+	// Skip next item number.
+	assetsItemNumber++
+	skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
+
+	values, nextPage := getAssetValues(scanner, 0, true)
+	counter := 0
+	for values[1] != "" && !nextPage {
+		assets = append(assets, getAsset1(values))
+
+		assetsItemNumber++
+		skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
+		counter++
+
+		values, nextPage = getAssetValues(scanner, 0, true)
+	}
+
+	// The last value is the importe for the first item.
+	firstAsset.Importe = stringToInt64(values[0])
+
+	// Restore skip assets to default state. The caller would remove the other
+	// remaining value.
+	skipAssets = skipAssets[:len(skipAssets)-counter-2]
+	assetsItemNumber = 1
+
+	return assets
 }
 
 func getAssetLine(scanner *bufio.Scanner) (line string, nextPage bool) {

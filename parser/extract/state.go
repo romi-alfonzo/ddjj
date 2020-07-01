@@ -83,6 +83,10 @@ func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
 		return nil, errors.New("real states do not match")
 	}
 
+	// Reset variables for next call.
+	totalState = 0
+	stateItemNumber = 0
+
 	return states, nil
 }
 

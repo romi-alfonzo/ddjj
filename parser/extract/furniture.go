@@ -65,6 +65,10 @@ func Furniture(scanner *bufio.Scanner) ([]*declaration.Furniture, error) {
 		return nil, errors.New("furniture do not match")
 	}
 
+	// Reset variables for next call.
+	totalFurniture = 0
+	furnitureItemNumber = 0
+
 	return furniture, nil
 }
 
