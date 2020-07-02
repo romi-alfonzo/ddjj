@@ -44,7 +44,7 @@ func makeUploadHandler(db *mongo.Database) http.HandlerFunc {
 			return
 		}
 
-		_, err = db.Collection("declaraciones").InsertOne(context.Background(), declaration)
+		_, err = db.Collection("declarations").InsertOne(context.Background(), declaration)
 		if err != nil {
 			fmt.Fprintf(w, "No se pudo procesar el documento")
 

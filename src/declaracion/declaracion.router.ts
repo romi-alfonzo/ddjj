@@ -5,19 +5,18 @@ import { getInvalidRequestResponse } from '../common/responses';
 export const declaracionRouter = express.Router();
 
 // Create a new assignment.
-declaracionRouter.get('/', async (req, res) => {
+declaracionRouter.get('/:id', async (req, res) => {
 
-  const { cedula } = req.query
-
+  const { id } = req.params
+  console.log(id)
   try {
 
-    const parsedCedula = parseInt(cedula as string);
-    const declarations = await DeclaracionService.getDeclarations(parsedCedula);
+    const declaration = await DeclaracionService.getDeclaration(id);
 
-    res.json(declarations);
+    res.json(declaration);
 
   }
   catch {
-    res.status(400).json(getInvalidRequestResponse("Cédula inválida"));
+    res.status(400).json(getInvalidRequestResponse("Declaracion no válida"));
   }
 });

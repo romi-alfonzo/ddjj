@@ -35,7 +35,11 @@ export class Database {
    * Generate the URI value to connect to the MongoDB cluster.
    */
   private getUri(): string {
-    const { DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD} = process.env;
+    const { DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_URI} = process.env;
+
+    if (DB_URI) {
+      return DB_URI
+    }
 
     let uri = `${DB_HOST}:${DB_PORT}/${this.db}`;
 

@@ -7,9 +7,10 @@ export interface DeclaracionAno {
 
 class Service {
 
-  async getDeclarations(cedula: Number): Promise<Declaracion[]> {
+  async getDeclaration(id: string): Promise<Declaracion> {
 
-    return DeclaracionModel.find({cedula: cedula}).sort({fecha: 1});
+    mongoose.set('debug', true);
+    return DeclaracionModel.findById(id);
 
   }
 
