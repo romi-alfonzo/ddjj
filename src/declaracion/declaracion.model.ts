@@ -1,17 +1,36 @@
 import { model, Document, Schema, Types } from 'mongoose';
 
 /**
- * Credito.
+ * Deposito.
  */
-interface Credito {
-  deudor: String;
+interface Deposito {
+  tipoEntidad: String;
+  entidad: String;
+  tipo: String;
+  pais: String;
+  importe: Number;
+}
+
+const DepositoSchema = new Schema({
+  tipoEntidad: { type: String, required: true },
+  entidad: { type: String, required: true },
+  tipo: { type: String, required: true },
+  pais: { type: String, require: true},
+  importe: { type: Number, required: true },
+}, { _id : false });
+
+/**
+ * Deudor.
+ */
+interface Deudor {
+  nombre: String;
   clase: String;
   plazo: Number;
   importe: Number;
 }
 
-const CreditoSchema = new Schema({
-  deudor: { type: String, required: true },
+const DeudorSchema = new Schema({
+  nombre: { type: String, required: true },
   clase: { type: String, required: true },
   plazo: { type: Number, required: true },
   importe: { type: Number, required: true },
@@ -27,8 +46,9 @@ interface Inmueble {
   distrito: String;
   adquisicion: Number;
   tipoAdquisicion: String;
-  superficie: Number;
+  superficieTerreno: Number;
   valorTerreno: Number;
+  superficieConstruccion: Number;
   valorConstruccion: Number;
   importe: Number;
 }
@@ -42,6 +62,7 @@ const InmuebleSchema = new Schema({
   tipoAdquisicion: { type: String, required: true },
   superficie: { type: Number, required: true },
   valorTerreno: { type: Number, required: true },
+  superficieConstruccion: { type: Number, required: true },
   valorConstruccion: { type: Number, required: true },
   importe: { type: Number, required: true },
 }, { _id : false });
@@ -89,6 +110,41 @@ const AgropecuariaSchema = new Schema({
   importe: { type: Number, required: true },
 }, { _id : false });
 
+/**
+ * Mueble.
+ */
+interface Mueble {
+  tipo: String;
+  importe: Number;
+}
+
+const MuebleSchema = new Schema({
+  tipo: { type: String, required: true },
+  importe: { type: Number, required: true },
+}, { _id : false });
+
+/**
+ * Otros Activo.
+ */
+interface OtroActivo {
+  descripcion: String;
+  empresa: String;
+  ruc: String;
+  pais: String;
+  cantidad: Number;
+  precio: Number;
+  importe: Number;
+}
+
+const OtroActivoSchema = new Schema({
+  descripcion: { type: String, required: true },
+  empresa: { type: String, required: true },
+  ruc: { type: String, required: true },
+  pais: { type: String, required: true },
+  cantidad: { type: Number, required: true },
+  precio: { type: Number, required: true },
+  importe: { type: Number, required: true },
+}, { _id : false });
 
 /**
  * Deuda.
@@ -97,7 +153,7 @@ interface Deuda {
   tipo: String;
   empresa: String;
   plazo: Number;
-  cuotaMensual: Number;
+  cuota: Number;
   total: Number;
   saldo: Number;
 }
@@ -106,39 +162,43 @@ const DeudaSchema = new Schema({
   tipo: { type: String, required: true },
   empresa: { type: String, required: true },
   plazo: { type: Number, required: true },
-  cuotaMensual: { type: Number, required: true },
+  cuota: { type: Number, required: true },
   total: { type: Number, required: true },
   saldo: { type: Number, required: true },
 }, { _id : false });
-
-interface Resumen {
-  activo: Number;
-  pasivo: Number;
-}
 
 /**
  * An declaration represents a declaration for a given year.
  */
 export interface Declaracion {
   // Information about the public official
+  fecha: Date;
   cedula: Number;
   nombre: String;
   apellido: String;
   nombreCompleto: String;
-  funcion?: String;
-  institucion?: String;
-
-  ano: Number;
+  cargo: String;
+  institucion: String;
 
   // Activos
-  creditos?: Credito[];
+  depositos?: Deposito[];
+  deudores?: Deudor[];
   inmuebles?: Inmueble[];
   vehiculos?: Vehiculo[];
-  agropecuaria?: Agropecuaria[];
+  actividadesAgropecuarias?: Agropecuaria[];
+  muebles?: Mueble[];
+  otrosActivos?: OtroActivo[];
 
-  deuda?: Deuda[];
+  deudas?: Deuda[];
 
-  resumen: Resumen;
+  ingresosMensual: Number;
+  ingresosAnual: Number;
+  egresosMensual: Number;
+  egresosAnual: Number;
+
+  activos: Number;
+  pasivos: Number;
+  patrimonioNeto: Number;
 }
 
 interface DeclaracionDocument extends Declaracion, Document {}
@@ -151,27 +211,35 @@ const DeclaracionSchema = new Schema({
   cedula: { type: Number, required: true },
   nombre: { type: String, required: true },
   apellido: { type: String, required: true },
-  nombreCompleto: { type: String, require: true },
-  funcion: { type: String, required: false },
-  institucion: { type: String, required: false },
+  cargo: { type: String, required: true },
+  institucion: { type: String, required: true },
 
-  ano: { type: Number, required: true },
+  fecha: { type: Date, required: true },
 
-  creditos: [CreditoSchema],
+  depositos: [DepositoSchema],
+  deudores: [DeudorSchema],
   inmuebles: [InmuebleSchema],
   vehiculos: [VehiculoSchema],
-  agropecuaria: [AgropecuariaSchema],
+  actividadesAgropecuarias: [AgropecuariaSchema],
+  muebles: [MuebleSchema],
+  otrosActivos: [OtroActivoSchema],
 
   deudas: [DeudaSchema],
 
-  resumen: { type: Object, required: true},
+  ingresosMensual: { type: Number, required: true },
+  ingresosAnual: { type: Number, required: true },
+  egresosMensual: { type: Number, required: true },
+  egresosAnual: { type: Number, required: true },
+
+  activos: { type: Number, required: true },
+  pasivos: { type: Number, required: true },
+  patrimonioNeto: { type: Number, required: true },
 });
 
 /**
  * Indexes.
  */
 DeclaracionSchema.index({cedula: 1});
-DeclaracionSchema.index({ano: 1});
-DeclaracionSchema.index({nombreCompleto: 1});
+DeclaracionSchema.index({fecha: 1});
 
 export const DeclaracionModel = model<DeclaracionDocument>('Declaration', DeclaracionSchema);
