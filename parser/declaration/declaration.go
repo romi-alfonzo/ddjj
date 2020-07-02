@@ -25,6 +25,11 @@ type Declaration struct {
 
 	Debts []*Debt `json:"deudas" bson:"deudas"`
 
+	IncomeMonthly   *int64 `json:"ingresosMensual" bson:"ingresosMensual"`
+	IncomeAnnual    *int64 `json:"ingresosAnual" bson:"ingresosAnual"`
+	ExpensesMonthly *int64 `json:"egresosMensual" bson:"egresosMensual"`
+	ExpensesAnnual  *int64 `json:"egresosAnual" bson:"egresosAnual"`
+
 	Assets       int64 `json:"activos" bson:"activos"`
 	Liabilities  int64 `json:"pasivos" bson:"pasivos"`
 	NetPatrimony int64 `json:"patrimonioNeto" bson:"patrimonioNeto"`

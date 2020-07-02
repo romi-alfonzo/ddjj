@@ -64,7 +64,12 @@ func main() {
 		log.Fatal("Error loading .env file", err)
 	}
 
-	dbOpts := &database.Opts{Database: os.Getenv("DB_NAME"), URI: os.Getenv("DB_URI")}
+	dbOpts := &database.Opts{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		Database: os.Getenv("DB_NAME"),
+		URI:      os.Getenv("DB_URI"),
+	}
 	db, err := database.StartConnection(dbOpts)
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
@@ -149,6 +154,19 @@ func extractPDF(file io.Reader) (*declaration.Declaration, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when extracting debts")
 	}
+
+	// Income and Expenses
+	/*scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.IncomeMonthly = extract.MonthlyIncome(scanner)
+
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.IncomeAnnual = extract.AnnualIncome(scanner)
+
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.ExpensesMonthly = extract.MonthlyExpenses(scanner)
+
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	d.ExpensesAnnual = extract.AnnualExpenses(scanner)*/
 
 	print(d)
 

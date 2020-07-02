@@ -51,7 +51,6 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 		values, nextPage = getAssetValues(scanner, 0, false)
 	}
 
-	//log.Println(assets)
 	total := addAssets(assets)
 	if total != totalAssets {
 		return nil, errors.New("other assets do not match")

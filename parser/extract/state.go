@@ -60,7 +60,7 @@ func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
 		// After reading all the possible values for a single item.
 		if index == 10 {
 			state := getState(scanner, values)
-			//fmt.Println(state)
+
 			states = append(states, state...)
 
 			// Skip the next item number.
@@ -72,11 +72,7 @@ func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
 
 		index++
 
-		//var nextPage bool
 		line, _ = getStateLine(scanner)
-		/*if nextPage {
-			fmt.Println(totalInState, addRealState(states))
-		}*/
 	}
 
 	total := addRealState(states)
