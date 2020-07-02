@@ -2,11 +2,12 @@ package extract
 
 import (
 	"bufio"
-	"ddjj/parser/declaration"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
+
+	"github.com/gvso/ddjj/parser/declaration"
 )
 
 var stateTwoLines = []string{

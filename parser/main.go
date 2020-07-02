@@ -2,59 +2,79 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"code.sajari.com/docconv"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
 
-	"ddjj/parser/declaration"
-	"ddjj/parser/extract"
+	"github.com/gvso/ddjj/parser/database"
+	"github.com/gvso/ddjj/parser/declaration"
+	"github.com/gvso/ddjj/parser/extract"
 )
 
-func upload(w http.ResponseWriter, req *http.Request) {
-	// 2 MB
-	req.ParseMultipartForm(2 << 20)
+func makeUploadHandler(db *mongo.Database) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		// 2 MB
+		req.ParseMultipartForm(2 << 20)
 
-	// in your case file would be fileupload
-	file, header, err := req.FormFile("file")
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		file, header, err := req.FormFile("file")
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+
+		fmt.Printf("File name %s\n", header.Filename)
+
+		declaration, err := extractPDF(file)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "No se pudo procesar el documento")
+
+			log.Errorf("Failed to process file %s: %s\n\n", header.Filename, err)
+			return
+		}
+
+		_, err = db.Collection("declaraciones").InsertOne(context.Background(), declaration)
+		if err != nil {
+			fmt.Fprintf(w, "No se pudo procesar el documento")
+
+			log.Errorf("Failed to store declaration %s: %s\n\n", header.Filename, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		json.NewEncoder(w).Encode(declaration)
 	}
-	defer file.Close()
-
-	fmt.Printf("File name %s\n", header.Filename)
-
-	declaration, err := extractPDF(file)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "No se pudo procesar el documento")
-
-		fmt.Printf("Failed to process file %s: %s\n\n", header.Filename, err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	json.NewEncoder(w).Encode(declaration)
 }
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file", err)
 	}
 
-	http.HandleFunc("/upload", upload)
+	dbOpts := &database.Opts{Database: os.Getenv("DB_NAME"), URI: os.Getenv("DB_URI")}
+	db, err := database.StartConnection(dbOpts)
+	if err != nil {
+		log.Fatal("failed to connect to database", err)
+	}
 
-	log.Println("Listening on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/upload", makeUploadHandler(db))
+
+	port := os.Getenv("PORT")
+	log.Println("Listening on port " + port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
 
 func extractPDF(file io.Reader) (*declaration.Declaration, error) {
@@ -148,7 +168,7 @@ func print(d *declaration.Declaration) {
 }
 
 func check(scanner *bufio.Scanner, d *declaration.Declaration) error {
-	net := d.Net()
+	net := d.CalculatePatrimony()
 	scanner = extract.MoveUntil(scanner, "PATRIMONIO NETO", true)
 
 	for i := 0; i < 6; i++ {

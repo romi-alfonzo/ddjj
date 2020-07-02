@@ -2,12 +2,13 @@ package extract
 
 import (
 	"bufio"
-	"ddjj/parser/declaration"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
+
+	"github.com/gvso/ddjj/parser/declaration"
 )
 
 // Debtors returns the debts people have with the official.

@@ -24,16 +24,25 @@ type Declaration struct {
 	OtherAssets  []*OtherAsset   `json:"otrosActivos" bson:"otrosActivos"`
 
 	Debts []*Debt `json:"deudas" bson:"deudas"`
+
+	Assets       int64 `json:"activos" bson:"activos"`
+	Liabilities  int64 `json:"pasivos" bson:"pasivos"`
+	NetPatrimony int64 `json:"patrimonioNeto" bson:"patrimonioNeto"`
 }
 
-// Net returns the patrimony's net value.
-func (d *Declaration) Net() int64 {
+// CalculatePatrimony adds up assets and debts.
+func (d *Declaration) CalculatePatrimony() int64 {
+
 	var debts int64
 	for _, v := range d.Debts {
 		debts += v.Saldo
 	}
 
-	return d.AddAssets() - debts
+	d.Assets = d.AddAssets()
+	d.Liabilities = debts
+	d.NetPatrimony = d.Assets - d.Liabilities
+
+	return d.NetPatrimony
 }
 
 // AddAssets adds all the assets.

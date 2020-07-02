@@ -2,12 +2,12 @@ package extract
 
 import (
 	"bufio"
-	"ddjj/parser/declaration"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
+
+	"github.com/gvso/ddjj/parser/declaration"
 )
 
 var totalAssets int64
@@ -32,8 +32,6 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 	// Also wants to skip item number
 	assetsItemNumber = 1
 	skipAssets = append(skipAssets, strconv.Itoa(assetsItemNumber))
-
-	fmt.Println(skipAssets)
 
 	var assets []*declaration.OtherAsset
 

@@ -2,12 +2,13 @@ package extract
 
 import (
 	"bufio"
-	"ddjj/parser/declaration"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
+
+	"github.com/gvso/ddjj/parser/declaration"
 )
 
 var totalFurniture int64

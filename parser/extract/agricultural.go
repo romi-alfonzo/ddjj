@@ -2,9 +2,10 @@ package extract
 
 import (
 	"bufio"
-	"ddjj/parser/declaration"
 	"strconv"
 	"strings"
+
+	"github.com/gvso/ddjj/parser/declaration"
 
 	"github.com/pkg/errors"
 )
