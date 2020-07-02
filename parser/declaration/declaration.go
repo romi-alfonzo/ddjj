@@ -3,16 +3,19 @@ package declaration
 import (
 	"fmt"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Declaration is the data on a public official's declaraion
 type Declaration struct {
-	Fecha       time.Time `json:"fecha" bson:"fecha"`
-	Cedula      int       `json:"cedula" bson:"cedula"`
-	Nombre      string    `json:"nombre" bson:"nombre"`
-	Apellido    string    `json:"appellido" bson:"appellido"`
-	Cargo       string    `json:"cargo" bson:"cargo"`
-	Institucion string    `json:"institucion" bson:"institucion"`
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Fecha       time.Time          `json:"fecha" bson:"fecha"`
+	Cedula      int                `json:"cedula" bson:"cedula"`
+	Nombre      string             `json:"nombre" bson:"nombre"`
+	Apellido    string             `json:"appellido" bson:"appellido"`
+	Cargo       string             `json:"cargo" bson:"cargo"`
+	Institucion string             `json:"institucion" bson:"institucion"`
 
 	// Activos
 	Deposits     []*Deposit      `json:"depositos" bson:"depositos"`
@@ -25,10 +28,10 @@ type Declaration struct {
 
 	Debts []*Debt `json:"deudas" bson:"deudas"`
 
-	IncomeMonthly   *int64 `json:"ingresosMensual" bson:"ingresosMensual"`
-	IncomeAnnual    *int64 `json:"ingresosAnual" bson:"ingresosAnual"`
-	ExpensesMonthly *int64 `json:"egresosMensual" bson:"egresosMensual"`
-	ExpensesAnnual  *int64 `json:"egresosAnual" bson:"egresosAnual"`
+	IncomeMonthly   int64 `json:"ingresosMensual" bson:"ingresosMensual"`
+	IncomeAnnual    int64 `json:"ingresosAnual" bson:"ingresosAnual"`
+	ExpensesMonthly int64 `json:"egresosMensual" bson:"egresosMensual"`
+	ExpensesAnnual  int64 `json:"egresosAnual" bson:"egresosAnual"`
 
 	Assets       int64 `json:"activos" bson:"activos"`
 	Liabilities  int64 `json:"pasivos" bson:"pasivos"`

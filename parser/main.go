@@ -14,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gvso/ddjj/parser/database"
@@ -35,7 +36,7 @@ func makeUploadHandler(db *mongo.Database) http.HandlerFunc {
 
 		fmt.Printf("File name %s\n", header.Filename)
 
-		declaration, err := extractPDF(file)
+		dec, err := extractPDF(file)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "No se pudo procesar el documento")
@@ -44,7 +45,21 @@ func makeUploadHandler(db *mongo.Database) http.HandlerFunc {
 			return
 		}
 
-		_, err = db.Collection("declarations").InsertOne(context.Background(), declaration)
+		ctx := context.Background()
+		d := &declaration.Declaration{}
+		err = db.Collection("declarations").FindOne(ctx, map[string]interface{}{
+			"cedula": dec.Cedula,
+			"fecha":  dec.Fecha,
+		}).Decode(d)
+
+		if err == nil {
+			w.Header().Set("Content-Type", "application/json")
+
+			json.NewEncoder(w).Encode(d)
+			return
+		}
+
+		res, err := db.Collection("declarations").InsertOne(ctx, dec)
 		if err != nil {
 			fmt.Fprintf(w, "No se pudo procesar el documento")
 
@@ -53,8 +68,8 @@ func makeUploadHandler(db *mongo.Database) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-
-		json.NewEncoder(w).Encode(declaration)
+		dec.ID = res.InsertedID.(primitive.ObjectID)
+		json.NewEncoder(w).Encode(dec)
 	}
 }
 
@@ -156,7 +171,7 @@ func extractPDF(file io.Reader) (*declaration.Declaration, error) {
 	}
 
 	// Income and Expenses
-	/*scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.IncomeMonthly = extract.MonthlyIncome(scanner)
 
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
@@ -166,7 +181,7 @@ func extractPDF(file io.Reader) (*declaration.Declaration, error) {
 	d.ExpensesMonthly = extract.MonthlyExpenses(scanner)
 
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.ExpensesAnnual = extract.AnnualExpenses(scanner)*/
+	d.ExpensesAnnual = extract.AnnualExpenses(scanner)
 
 	print(d)
 
