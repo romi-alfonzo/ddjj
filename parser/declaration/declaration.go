@@ -7,23 +7,23 @@ import (
 
 // Declaration is the data on a public official's declaraion
 type Declaration struct {
-	Date        time.Time
-	Cedula      int
-	Nombre      string
-	Apellido    string
-	Funcion     string
-	Institucion string
+	Fecha       time.Time `json:"fecha" bson:"fecha"`
+	Cedula      int       `json:"cedula" bson:"cedula"`
+	Nombre      string    `json:"nombre" bson:"nombre"`
+	Apellido    string    `json:"appellido" bson:"appellido"`
+	Cargo       string    `json:"cargo" bson:"cargo"`
+	Institucion string    `json:"institucion" bson:"institucion"`
 
 	// Activos
-	Deposits     []*Deposit
-	Debtors      []*Debtor
-	RealStates   []*RealState
-	Vehicles     []*Vehicle
-	Agricultural []*Agricultural
-	Furniture    []*Furniture
-	OtherAssets  []*OtherAsset
+	Deposits     []*Deposit      `json:"depositos" bson:"depositos"`
+	Debtors      []*Debtor       `json:"deudores" bson:"deudores"`
+	RealStates   []*RealState    `json:"inmuebles" bson:"inmuebles"`
+	Vehicles     []*Vehicle      `json:"vehiculos" bson:"vehiculos"`
+	Agricultural []*Agricultural `json:"actividadesAgropecuarias" bson:"actividadesAgropecuarias"`
+	Furniture    []*Furniture    `json:"muebles" bson:"muebles"`
+	OtherAssets  []*OtherAsset   `json:"otrosActivos" bson:"otrosActivos"`
 
-	Debts []*Debt
+	Debts []*Debt `json:"deudas" bson:"deudas"`
 }
 
 // Net returns the patrimony's net value.
@@ -67,81 +67,81 @@ func (d *Declaration) AddAssets() int64 {
 
 // Deposit describes money at a financial institution.
 type Deposit struct {
-	TipoEntidad string
-	Entidad     string
-	Tipo        string
-	Pais        string
-	Importe     int64
+	TipoEntidad string `json:"tipoEntidad" bson:"tipoEntidad"`
+	Entidad     string `json:"entidad" bson:"entidad"`
+	Tipo        string `json:"tipo" bson:"tipo"`
+	Pais        string `json:"pais" bson:"pais"`
+	Importe     int64  `json:"importe" bson:"importe"`
 }
 
 // Debtor describes a person that owns money to the official.
 type Debtor struct {
-	Nombre  string
-	Clase   string
-	Plazo   int
-	Importe int64
+	Nombre  string `json:"nombre" bson:"nombre"`
+	Clase   string `json:"clase" bson:"clase"`
+	Plazo   int    `json:"plazo" bson:"plazo"`
+	Importe int64  `json:"importe" bson:"importe"`
 }
 
 // RealState is a real state owned by the official.
 type RealState struct {
-	Padron                 string
-	Uso                    string
-	Pais                   string
-	Distrito               string
-	Adquisicion            int
-	TipoAdquisicion        string
-	SuperficieTerreno      int64
-	ValorTerreno           int64
-	SuperficieConstruccion int64
-	ValorConstruccion      int64
-	Importe                int64
+	Padron                 string `json:"padron" bson:"padron"`
+	Uso                    string `json:"uso" bson:"uso"`
+	Pais                   string `json:"pais" bson:"pais"`
+	Distrito               string `json:"distrito" bson:"distrito"`
+	Adquisicion            int    `json:"adquisicion" bson:"adquisicion"`
+	TipoAdquisicion        string `json:"tipoAdquisicion" bson:"tipoAdquisicion"`
+	SuperficieTerreno      int64  `json:"superficieTerreno" bson:"superficieTerreno"`
+	ValorTerreno           int64  `json:"valorTerreno" bson:"valorTerreno"`
+	SuperficieConstruccion int64  `json:"superficieConstruccion" bson:"superficieConstruccion"`
+	ValorConstruccion      int64  `json:"valorConstruccion" bson:"valorConstruccion"`
+	Importe                int64  `json:"importe" bson:"importe"`
 }
 
 // Vehicle is a vehicle owned by the official.
 type Vehicle struct {
-	Tipo        string
-	Marca       string
-	Modelo      string
-	Importe     int64
-	Adquisicion int
-	Fabricacion int
+	Tipo        string `json:"tipo" bson:"tipo"`
+	Marca       string `json:"marca" bson:"marca"`
+	Modelo      string `json:"modelo" bson:"modelo"`
+	Adquisicion int    `json:"adquisicion" bson:"adquisicion"`
+	Fabricacion int    `json:"fabricacion" bson:"fabricacion"`
+	Importe     int64  `json:"importe" bson:"importe"`
 }
 
 // Agricultural is an official's agricultural activity.
 type Agricultural struct {
-	Tipo      string
-	Ubicacion string
-	Especie   string
-	Cantidad  int64
-	Precio    int64
-	Importe   int64
+	Tipo      string `json:"tipo" bson:"tipo"`
+	Ubicacion string `json:"ubicacion" bson:"ubicacion"`
+	Especie   string `json:"especie" bson:"especie"`
+	Cantidad  int64  `json:"cantidad" bson:"cantidad"`
+	Precio    int64  `json:"precio" bson:"precio"`
+	Importe   int64  `json:"importe" bson:"importe"`
 }
 
 // Furniture is a furniture owned by the official.
 type Furniture struct {
-	Tipo    string
-	Importe int64
+	Tipo    string `json:"tipo" bson:"tipo"`
+	Importe int64  `json:"importe" bson:"importe"`
 }
 
 // OtherAsset is another asset not included in other fields.
 type OtherAsset struct {
-	Descripcion string
-	Empresa     string
-	RUC         string
-	Pais        string
-	Cantidad    int64
-	Precio      int64
-	Importe     int64
+	Descripcion string `json:"descripcion" bson:"descripcion"`
+	Empresa     string `json:"empresa" bson:"empresa"`
+	RUC         string `json:"ruc" bson:"ruc"`
+	Pais        string `json:"pais" bson:"pais"`
+	Cantidad    int64  `json:"cantidad" bson:"cantidad"`
+	Precio      int64  `json:"precio" bson:"precio"`
+	Importe     int64  `json:"importe" bson:"importe"`
 }
 
 // Debt is money the official owes to others.
 type Debt struct {
-	Tipo    string
-	Empresa string
-	Plazo   int
-	Cuota   int64
-	Total   int64
-	Saldo   int64
+	Tipo    string `json:"tipo" bson:"tipo"`
+	Empresa string `json:"empresa" bson:"empresa"`
+	Plazo   int    `json:"plazo" bson:"plazo"`
+	Cuota   int64  `json:"cuota" bson:"cuota"`
+	Total   int64  `json:"total" bson:"total"`
+	Saldo   int64  `json:"saldo" bson:"saldo"`
 }
 
 func (d *Deposit) String() string {

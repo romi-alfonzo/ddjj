@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -30,8 +31,7 @@ func upload(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Printf("File name %s\n", header.Filename)
 
-	err = extractPDF(file)
-
+	declaration, err := extractPDF(file)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "No se pudo procesar el documento")
@@ -40,7 +40,9 @@ func upload(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Documento procesado correctamente")
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(declaration)
 }
 
 func main() {
@@ -55,7 +57,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func extractPDF(file io.Reader) error {
+func extractPDF(file io.Reader) (*declaration.Declaration, error) {
 	res, err := docconv.Convert(file, "application/pdf", true)
 	if err != nil {
 		log.Fatal(err)
@@ -64,80 +66,85 @@ func extractPDF(file io.Reader) error {
 	// Basic Info.
 	scanner := bufio.NewScanner(strings.NewReader(res.Body))
 	d := &declaration.Declaration{
-		Date:        extract.Date(scanner),
+		Fecha:       extract.Date(scanner),
 		Cedula:      extract.Cedula(scanner),
 		Nombre:      extract.Name(scanner),
 		Apellido:    extract.Lastname(scanner),
 		Institucion: extract.Institution(scanner),
-		Funcion:     extract.JobTitle(scanner),
+		Cargo:       extract.JobTitle(scanner),
 	}
 
 	// Deposits.
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.Deposits, err = extract.Deposits(scanner)
 	if err != nil {
-		return errors.Wrap(err, "failed when extracting deposits")
+		return nil, errors.Wrap(err, "failed when extracting deposits")
 	}
 
 	// Debtors.
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.Debtors, err = extract.Debtors(scanner)
 	if err != nil {
-		return errors.Wrap(err, "failed when extracting debtors")
+		return nil, errors.Wrap(err, "failed when extracting debtors")
 	}
 
 	// Real state.
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.RealStates, err = extract.RealStates(scanner)
 	if err != nil {
-		return errors.Wrap(err, "failed when extracting debtors")
+		return nil, errors.Wrap(err, "failed when extracting debtors")
 	}
 
 	// Vehicles
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.Vehicles, err = extract.Vehicles(scanner)
 	if err != nil {
-		return errors.Wrap(err, "failed when extracting vehicles")
+		return nil, errors.Wrap(err, "failed when extracting vehicles")
 	}
 
 	// Agricultural activity
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.Agricultural, err = extract.Agricultural(scanner)
 	if err != nil {
-		return errors.Wrap(err, "failed when extracting agricultural activities")
+		return nil, errors.Wrap(err, "failed when extracting agricultural activities")
 	}
 
 	// Furniture
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.Furniture, err = extract.Furniture(scanner)
 	if err != nil {
-		return errors.Wrap(err, "failed when extracting furniture")
+		return nil, errors.Wrap(err, "failed when extracting furniture")
 	}
 
 	// Other assets
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.OtherAssets, err = extract.Assets(scanner)
 	if err != nil {
-		return errors.Wrap(err, "failed when extracting other assets")
+		return nil, errors.Wrap(err, "failed when extracting other assets")
 	}
 
 	// Debts
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 	d.Debts, err = extract.Debts(scanner)
 	if err != nil {
-		return errors.Wrap(err, "failed when extracting debts")
+		return nil, errors.Wrap(err, "failed when extracting debts")
 	}
 
 	print(d)
 
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
 
-	return check(scanner, d)
+	err = check(scanner, d)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to check correctness")
+	}
+
+	return d, nil
 }
 
 func print(d *declaration.Declaration) {
 	fmt.Printf("Fecha: %v\nCedula: %d\nName: %s\nInstitution: %s\nJob: %s\n\n",
-		d.Date, d.Cedula, d.Nombre+" "+d.Apellido, d.Institucion, d.Funcion)
+		d.Fecha, d.Cedula, d.Nombre+" "+d.Apellido, d.Institucion, d.Cargo)
 }
 
 func check(scanner *bufio.Scanner, d *declaration.Declaration) error {

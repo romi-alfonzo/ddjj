@@ -92,7 +92,7 @@ func getDebtValues(scanner *bufio.Scanner, index int, remaining bool) (values [6
 func getDebt(scanner *bufio.Scanner, values [6]string) []*declaration.Debt {
 	// En algunos casos, el importe de la primera deuda está casi al final de la
 	// lista. La otra pecuriaridad es que el tipo de deuda de los items 2...n
-	// están al final. Por ejemplo Juan Afara 2014,
+	// están al final. Por ejemplo: Juan Afara 2014
 	// Case 2.
 	if !isNumber(values[5]) {
 		return getDebt2(scanner, values)
