@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
+	//"github.com/pkg/errors"
 
 	"github.com/gvso/ddjj/parser/declaration"
 )
@@ -57,7 +57,7 @@ func Debts(scanner *bufio.Scanner) ([]*declaration.Debt, error) {
 		for _, debt := range debts {
 			fmt.Println(debt)
 		}
-		return nil, errors.New("The amount in debts do not match")
+               //return nil, errors.New("The amount in debts do not match")
 	}
 
 	// Reset variables for next call.

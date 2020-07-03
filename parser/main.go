@@ -73,11 +73,39 @@ func makeUploadHandler(db *mongo.Database) http.HandlerFunc {
 	}
 }
 
+func handleSingleFile(filePath string) {
+
+    //log.Println(filePath)
+    dat, err := os.Open(filePath)
+    if err != nil {
+        log.Error("File %s not found. %s", filePath, err)
+    }
+    dec, err := extractPDF(dat)
+    if err != nil {
+            log.Errorf("Failed to process file %s: %s\n\n", filePath, err)
+            return
+    }
+
+    b, err := json.Marshal(dec)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    fmt.Println(string(b))
+}
+
 func main() {
+
+        if os.Args[1] != "" {
+            handleSingleFile(os.Args[1])
+            return
+        }
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file", err)
 	}
+
 
 	dbOpts := &database.Opts{
 		Host:     os.Getenv("DB_HOST"),
