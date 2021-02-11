@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/gvso/ddjj/parser/declaration"
 )
 
@@ -40,7 +38,7 @@ var skipState = []string{
 }
 
 // RealStates returns the real states owned by the official.
-func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
+func RealStates(scanner *bufio.Scanner) []*declaration.RealState {
 
 	scanner = MoveUntil(scanner, "1.4 INMUEBLES", true)
 	var states []*declaration.RealState
@@ -76,15 +74,20 @@ func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
 	}
 
 	total := addRealState(states)
+	if total == 0 {
+		ParserMessage("failed when extracting states")
+		return nil
+	}
+
 	if total != totalState {
-		return nil, errors.New("real states do not match")
+		ParserMessage("real states do not match")
 	}
 
 	// Reset variables for next call.
 	totalState = 0
 	stateItemNumber = 0
 
-	return states, nil
+	return states
 }
 
 func getState(scanner *bufio.Scanner, values [11]string) []*declaration.RealState {

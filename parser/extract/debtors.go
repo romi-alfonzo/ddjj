@@ -2,17 +2,14 @@ package extract
 
 import (
 	"bufio"
-	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/gvso/ddjj/parser/declaration"
 )
 
 // Debtors returns the debts people have with the official.
-func Debtors(scanner *bufio.Scanner) ([]*declaration.Debtor, error) {
+func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
 	var skip = []string{
 		"#",
 		"NOMBRE DEL DEUDOR",
@@ -75,16 +72,17 @@ func Debtors(scanner *bufio.Scanner) ([]*declaration.Debtor, error) {
 	}
 
 	totalDebtors := addDebtors(debtors)
-	if total > 0 {
-		if totalDebtors != total {
-			return nil, errors.New("debtors do not match")
-		}
-	} else {
-		// In some cases, the total could not be retrieved. Ignore those for now.
-		fmt.Print("The total in debtors amount could not be verified.\n\n")
+	
+	if total == 0 {
+		ParserMessage("failed when extracting debtors")
+		return nil
 	}
 
-	return debtors, nil
+	if totalDebtors != total {
+		ParserMessage("debtors do not match")
+	}
+
+	return debtors
 }
 
 type debtorOpts struct {

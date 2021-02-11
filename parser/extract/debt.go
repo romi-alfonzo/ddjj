@@ -2,11 +2,8 @@ package extract
 
 import (
 	"bufio"
-	"fmt"
 	"strconv"
 	"strings"
-
-	//"github.com/pkg/errors"
 
 	"github.com/gvso/ddjj/parser/declaration"
 )
@@ -26,7 +23,7 @@ var skipDebt = []string{
 }
 
 // Debts returns money the official owes.
-func Debts(scanner *bufio.Scanner) ([]*declaration.Debt, error) {
+func Debts(scanner *bufio.Scanner) []*declaration.Debt {
 
 	scanner = MoveUntil(scanner, "2.1 TIPOS DE DEUDAS", true)
 
@@ -53,18 +50,20 @@ func Debts(scanner *bufio.Scanner) ([]*declaration.Debt, error) {
 	}
 
 	total := addDebts(debts)
+	if total == 0 {
+		ParserMessage("failed when extracting debts")
+		return nil
+	}
+
 	if total != totalDebt {
-		for _, debt := range debts {
-			fmt.Println(debt)
-		}
-               //return nil, errors.New("The amount in debts do not match")
+		ParserMessage("The amount in debts do not match")
 	}
 
 	// Reset variables for next call.
 	totalDebt = 0
 	debtItemNumber = 0
 
-	return debts, nil
+	return debts
 }
 
 func getDebtValues(scanner *bufio.Scanner, index int, remaining bool) (values [6]string, nextPage bool) {
