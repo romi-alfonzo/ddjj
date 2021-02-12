@@ -9,97 +9,124 @@ import (
 
 	"code.sajari.com/docconv"
 
-	"github.com/gvso/ddjj/parser/declaration"
-	"github.com/gvso/ddjj/parser/extract"
+	"github.com/InstIDEA/ddjj/parser/declaration"
+	"github.com/InstIDEA/ddjj/parser/extract"
 )
 
-func handleSingleFile(filePath string) {
+func handleSingleFile(filePath string) extract.ParserData {
 	dat, err := os.Open(filePath)
+	parserData := extract.Create()
 	if err == nil {
-		dec, err := extractPDF(dat)
+		dec, err := extractPDF(parserData, dat)
 		if err != nil {
-			s := fmt.Sprint("Failed to process file", filePath, ": ", err)
-			extract.ParserMessage(s)
-			return
+			parserData.AddMessage(fmt.Sprint("Failed to process file", filePath, ": ", err))
+			parserData.Status = 1
+			return parserData
 		}
-		extract.ParserData(dec)
+		parserData.SetData(dec)
 	} else {
-		s := fmt.Sprint("File ", filePath, " not found. ", err)
-		extract.ParserMessage(s)
+		parserData.AddMessage(fmt.Sprint("File ", filePath, " not found. ", err))
 	}
+	parserData.Status = 0
+	return parserData
 }
 
 func main() {
 	if len(os.Args) <= 1 {
-		extract.ParserMessage("Missing file path")
+		fmt.Println("Usage: ./parser file.pdf")
+		os.Exit(1)
 		return
 	}
-    handleSingleFile(os.Args[1])
-	extract.ParserPrint()
+	parsed := handleSingleFile(os.Args[1])
+	parsed.ParserPrint()
 }
 
-func extractPDF(file io.Reader) (*declaration.Declaration, error) {
+func extractPDF(parser extract.ParserData, file io.Reader) (*declaration.Declaration, error) {
 	res, err := docconv.Convert(file, "application/pdf", true)
 	if err != nil {
-		extract.ParserMessage(err.Error())
+		parser.AddMessage(err.Error())
 		return nil, err
 	}
 
-	extract.ParserRawData(res.Body)
+	parser.RawData(res.Body)
 
 	body := &res.Body
-	d := &declaration.Declaration { }
+	d := &declaration.Declaration{}
 
 	// Basic Info.
 	scanner := bufio.NewScanner(strings.NewReader(res.Body))
-	d.Fecha = extract.Date(scanner)
+	d.Fecha = parser.CheckTime(extract.Date(scanner))
 
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Cedula = extract.Cedula(scanner)
+	d.Cedula = parser.CheckInt(extract.Cedula(scanner))
 
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Nombre = extract.Name(scanner)
+	d.Nombre = parser.Check(extract.Name(scanner))
 
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Apellido = extract.Lastname(scanner)
+	d.Apellido = parser.Check(extract.Lastname(scanner))
 
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Institucion = extract.Institution(scanner)
+	d.Institucion = parser.Check(extract.Institution(scanner))
 
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Cargo = extract.JobTitle(scanner)
+	d.Cargo = parser.Check(extract.JobTitle(scanner))
 
 	// Deposits
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Deposits = extract.Deposits(scanner)
+	d.Deposits, err = extract.Deposits(scanner)
+	if err != nil {
+		parser.AddError(err)
+	}
 
 	// Debtors.
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Debtors = extract.Debtors(scanner)
+	d.Debtors, err = extract.Debtors(scanner)
+	if err != nil {
+		parser.AddError(err)
+	}
 
 	// Real state.
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.RealStates = extract.RealStates(scanner)
+	d.RealStates, err = extract.RealStates(scanner)
+	if err != nil {
+		parser.AddError(err)
+	}
 
 	// Vehicles
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Vehicles = extract.Vehicles(scanner)
+	d.Vehicles, err = extract.Vehicles(scanner)
+	if err != nil {
+		parser.AddError(err)
+	}
 
 	// Agricultural activity
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Agricultural = extract.Agricultural(scanner)
+	d.Agricultural, err = extract.Agricultural(scanner)
+	if err != nil {
+		parser.AddError(err)
+	}
 
 	// Furniture
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Furniture = extract.Furniture(scanner)
+	d.Furniture, err = extract.Furniture(scanner)
+	if err != nil {
+		parser.AddError(err)
+	}
 
 	// Other assets
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.OtherAssets = extract.Assets(scanner)
+	d.OtherAssets, err = extract.Assets(scanner)
+	if err != nil {
+		parser.AddError(err)
+	}
 
 	// Debts
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Debts = extract.Debts(scanner)
+	d.Debts, err = extract.Debts(scanner)
+	if err != nil {
+		parser.AddError(err)
+	}
 
 	// Income and Expenses
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
@@ -120,15 +147,15 @@ func extractPDF(file io.Reader) (*declaration.Declaration, error) {
 	d.CalculatePatrimony()
 
 	if d.Assets != d.Resumen.TotalActivo {
-		extract.ParserMessage("calculated assets and summary assets does not match")
+		parser.AddMessage("calculated assets and summary assets does not match")
 	}
 
 	if d.Liabilities != d.Resumen.TotalPasivo {
-		extract.ParserMessage("calculated liabilities and summary liabilities does not match")
+		parser.AddMessage("calculated liabilities and summary liabilities does not match")
 	}
 
 	if d.NetPatrimony != d.Resumen.PatrimonioNeto {
-		extract.ParserMessage("calculated net patrimony and summary net patrimony does not match")
+		parser.AddMessage("calculated net patrimony and summary net patrimony does not match")
 	}
 
 	return d, nil

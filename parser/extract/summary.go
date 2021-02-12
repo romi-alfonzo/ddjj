@@ -2,13 +2,13 @@ package extract
 
 import (
 	"bufio"
+	"github.com/InstIDEA/ddjj/parser/declaration"
 	"strings"
-	"github.com/gvso/ddjj/parser/declaration"	
 )
 
-func GetSummary(body *string) *declaration.Summary{
-	r := &declaration.Summary{ }
-	exclude := &[]int{ }
+func GetSummary(body *string) *declaration.Summary {
+	r := &declaration.Summary{}
+	exclude := &[]int{}
 
 	scanner := bufio.NewScanner(strings.NewReader(*body))
 	r.TotalActivo = StringToInt64(getString(scanner, "TOTAL ACTIVO", EVnum, exclude))

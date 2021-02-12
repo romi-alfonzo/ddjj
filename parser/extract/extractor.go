@@ -2,11 +2,11 @@ package extract
 
 import (
 	"bufio"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 var countries = map[string]bool{}
@@ -45,7 +45,7 @@ func getInt(scanner *bufio.Scanner, precedence string, t ExpectedValue, exclude 
 func getString(scanner *bufio.Scanner, precedence string, t ExpectedValue, exclude *[]int) string {
 	var value string
 	count := 1
-	loop:
+loop:
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -120,7 +120,7 @@ func stringToYear(line string) int {
 }
 
 func isDate(line string) bool {
-	matched, _ := regexp.MatchString(`[0-9]{2}\/[0-9]{2}\/[0-9]{4}`, line)
+	matched, _ := regexp.MatchString(`[0-9]{2}/[0-9]{2}/[0-9]{4}`, line)
 	return matched
 }
 
@@ -130,7 +130,7 @@ func isBarCode(line string) bool {
 }
 
 func isNumber(line string) bool {
-	matched, _ := regexp.MatchString(`[0-9\.\,]*[0-9]$`, line)
+	matched, _ := regexp.MatchString(`[0-9.,]*[0-9]$`, line)
 	return matched
 }
 
@@ -179,13 +179,13 @@ func expectedValue(value string, precedence string, t ExpectedValue, exclude *[]
 		}
 	}
 
-	switch (t) {
-		case EVdate:
-			return isDate(value) 
-		case EVnum:
-			return isNumber(value)
-		case EValphaNum:
-			return isAlphaNum(value)
+	switch t {
+	case EVdate:
+		return isDate(value)
+	case EVnum:
+		return isNumber(value)
+	case EValphaNum:
+		return isAlphaNum(value)
 	}
 	return false
 }

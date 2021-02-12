@@ -1,6 +1,6 @@
-module github.com/gvso/ddjj/parser
+module github.com/InstIDEA/ddjj/parser
 
-go 1.13
+go 1.15
 
 require (
 	code.sajari.com/docconv v1.1.0

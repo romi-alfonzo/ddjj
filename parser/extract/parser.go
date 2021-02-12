@@ -1,49 +1,78 @@
 package extract
 
 import (
-	"fmt"
 	"encoding/json"
-	"github.com/gvso/ddjj/parser/declaration"
+	"fmt"
+	"github.com/InstIDEA/ddjj/parser/declaration"
+	"time"
 )
 
-type parserData struct {
-	Message	[]string					`json:"message"`
-	Status	int							`json:"status"`
-	Data	*declaration.Declaration	`json:"data"`
-	Raw		[]string					`json:"raw"`
+type ParserData struct {
+	Message []string                 `json:"message"`
+	Status  int                      `json:"status"`
+	Data    *declaration.Declaration `json:"data"`
+	Raw     []string                 `json:"raw"`
 }
 
 type ExpectedValue int
+
 const (
-    EVdate ExpectedValue = iota
+	EVdate ExpectedValue = iota
 	EValphaNum
 	EVnum
 )
 
-var parser parserData
-
-func ParserMessage(msg string) {
+func (parser ParserData) AddMessage(msg string) {
 	parser.Message = append(parser.Message, msg)
 }
 
-func ParserStatus(code int) {
-	parser.Status = code
+func (parser ParserData) AddError(msg error) {
+	parser.Message = append(parser.Message, msg.Error())
 }
 
-func ParserData(d *declaration.Declaration) {
+func Create() ParserData {
+	return ParserData{
+		Message: make([]string, 0),
+		Status:  0,
+		Data:    nil,
+		Raw:     make([]string, 0),
+	}
+}
+
+func (parser ParserData) SetData(d *declaration.Declaration) {
 	parser.Data = d
 }
 
-func ParserRawData(s string) {
+func (parser ParserData) RawData(s string) {
 	parser.Raw = append(parser.Raw, s)
 }
 
-func ParserPrint() {
-	parser.Status = 1
+func (parser ParserData) ParserPrint() {
 	b, err := json.MarshalIndent(parser, "", "\t")
 	if err != nil {
 		fmt.Println("{ message: null, status: 0, data: null, raw: null }")
 		return
 	}
 	fmt.Println(string(b))
+}
+
+func (parser ParserData) Check(val string, err error) string {
+	if err != nil {
+		parser.AddError(err)
+	}
+	return val
+}
+
+func (parser ParserData) CheckInt(val int, err error) int {
+	if err != nil {
+		parser.AddError(err)
+	}
+	return val
+}
+
+func (parser ParserData) CheckTime(val time.Time, err error) time.Time {
+	if err != nil {
+		parser.AddError(err)
+	}
+	return val
 }
