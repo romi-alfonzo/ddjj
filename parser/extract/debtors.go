@@ -2,14 +2,15 @@ package extract
 
 import (
 	"bufio"
+	"errors"
 	"strconv"
 	"strings"
 
-	"github.com/gvso/ddjj/parser/declaration"
+	"github.com/InstIDEA/ddjj/parser/declaration"
 )
 
 // Debtors returns the debts people have with the official.
-func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
+func Debtors(scanner *bufio.Scanner) ([]*declaration.Debtor, error) {
 	var skip = []string{
 		"#",
 		"NOMBRE DEL DEUDOR",
@@ -72,17 +73,16 @@ func Debtors(scanner *bufio.Scanner) []*declaration.Debtor {
 	}
 
 	totalDebtors := addDebtors(debtors)
-	
+
 	if total == 0 {
-		ParserMessage("failed when extracting debtors")
-		return nil
+		return nil, errors.New("failed when extracting debtors")
 	}
 
 	if totalDebtors != total {
-		ParserMessage("debtors do not match")
+		return nil, errors.New("debtors do not match")
 	}
 
-	return debtors
+	return debtors, nil
 }
 
 type debtorOpts struct {

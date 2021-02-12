@@ -6,12 +6,12 @@ import (
 
 // Declaration is the data on a public official's declaraion
 type Declaration struct {
-	Fecha       time.Time          `json:"fecha"`
-	Cedula      int                `json:"cedula"`
-	Nombre      string             `json:"nombre"`
-	Apellido    string             `json:"apellido"`
-	Cargo       string             `json:"cargo"`
-	Institucion string             `json:"institucion"`
+	Fecha       time.Time `json:"fecha"`
+	Cedula      int       `json:"cedula"`
+	Nombre      string    `json:"nombre"`
+	Apellido    string    `json:"apellido"`
+	Cargo       string    `json:"cargo"`
+	Institucion string    `json:"institucion"`
 
 	// Activos
 	Deposits     []*Deposit      `json:"depositos"`
@@ -22,7 +22,7 @@ type Declaration struct {
 	Furniture    []*Furniture    `json:"muebles"`
 	OtherAssets  []*OtherAsset   `json:"otrosActivos"`
 
-	Debts []*Debt 	`json:"deudas"`
+	Debts []*Debt `json:"deudas"`
 
 	IncomeMonthly   int64 `json:"ingresosMensual"`
 	IncomeAnnual    int64 `json:"ingresosAnual"`
@@ -32,14 +32,14 @@ type Declaration struct {
 	Assets       int64 `json:"activos"`
 	Liabilities  int64 `json:"pasivos"`
 	NetPatrimony int64 `json:"patrimonioNeto"`
-	
-	Resumen		*Summary		`json:"resumen"`
+
+	Resumen *Summary `json:"resumen"`
 }
 
 type Summary struct {
-	TotalActivo		int64	`json:"totalActivo"`
-	TotalPasivo		int64	`json:"totalPasivo"`
-	PatrimonioNeto	int64 `json:"patrimonioNeto"`
+	TotalActivo    int64 `json:"totalActivo"`
+	TotalPasivo    int64 `json:"totalPasivo"`
+	PatrimonioNeto int64 `json:"patrimonioNeto"`
 }
 
 // Deposit describes money at a financial institution.

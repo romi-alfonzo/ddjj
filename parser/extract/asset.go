@@ -2,10 +2,11 @@ package extract
 
 import (
 	"bufio"
+	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 
-	"github.com/gvso/ddjj/parser/declaration"
+	"github.com/InstIDEA/ddjj/parser/declaration"
 )
 
 var totalAssets int64
@@ -24,7 +25,7 @@ var skipAssets = []string{
 }
 
 // Assets returns other assets owned by the official.
-func Assets(scanner *bufio.Scanner) []*declaration.OtherAsset {
+func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 	scanner = MoveUntil(scanner, "1.9 OTROS ACTIVOS", true)
 
 	// Also wants to skip item number
@@ -51,19 +52,18 @@ func Assets(scanner *bufio.Scanner) []*declaration.OtherAsset {
 
 	total := addAssets(assets)
 	if total == 0 {
-		ParserMessage("failed when extracting other assets")
-		return nil
+		return nil, errors.New("failed when extracting other assets")
 	}
 
 	if total != totalAssets {
-		ParserMessage("other assets do not match")
+		return nil, errors.New("other assets do not match")
 	}
 
 	// Reset variables for next call.
 	totalAssets = 0
 	assetsItemNumber = 0
 
-	return assets
+	return assets, nil
 }
 
 func getAssetValues(scanner *bufio.Scanner, index int, remaining bool) (values [7]string, nextPage bool) {

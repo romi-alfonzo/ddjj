@@ -2,10 +2,11 @@ package extract
 
 import (
 	"bufio"
+	"errors"
 	"strconv"
 	"strings"
 
-	"github.com/gvso/ddjj/parser/declaration"
+	"github.com/InstIDEA/ddjj/parser/declaration"
 )
 
 var totalFurniture int64
@@ -19,7 +20,7 @@ var skipFurniture = []string{
 }
 
 // Furniture returns the furniture owned by the official.
-func Furniture(scanner *bufio.Scanner) []*declaration.Furniture {
+func Furniture(scanner *bufio.Scanner) ([]*declaration.Furniture, error) {
 
 	scanner = MoveUntil(scanner, "TIPO MUEBLES", true)
 	var furniture []*declaration.Furniture
@@ -57,19 +58,18 @@ func Furniture(scanner *bufio.Scanner) []*declaration.Furniture {
 
 	total := addFurniture(furniture)
 	if total == 0 {
-		ParserMessage("failed when extracting furniture")
-		return nil
+		return nil, errors.New("failed when extracting furniture")
 	}
 
 	if total != totalFurniture {
-		ParserMessage("furniture do not match")
+		return nil, errors.New("furniture do not match")
 	}
 
 	// Reset variables for next call.
 	totalFurniture = 0
 	furnitureItemNumber = 0
 
-	return furniture
+	return furniture, nil
 }
 
 func getFurnishing(values [2]string) *declaration.Furniture {

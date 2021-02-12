@@ -2,14 +2,15 @@ package extract
 
 import (
 	"bufio"
+	"errors"
 	"strconv"
 	"strings"
 
-	"github.com/gvso/ddjj/parser/declaration"
+	"github.com/InstIDEA/ddjj/parser/declaration"
 )
 
 // Vehicles returns the public official's vehicles.
-func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
+func Vehicles(scanner *bufio.Scanner) ([]*declaration.Vehicle, error) {
 	var skip = []string{
 		"#",
 		"TIPO VEHÍCULO",
@@ -117,15 +118,14 @@ func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 
 	totalVehicles := addVehicles(vehicles)
 	if total == 0 {
-		ParserMessage("failed when extracting vehicles")
-		return nil
+		return nil, errors.New("failed when extracting vehicles")
 	}
 
 	if totalVehicles != total {
-		ParserMessage("vehicles do not match")
+		return nil, errors.New("vehicles do not match")
 	}
 
-	return vehicles
+	return vehicles, nil
 }
 
 type vehicleOpts struct {

@@ -2,14 +2,15 @@ package extract
 
 import (
 	"bufio"
+	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 
-	"github.com/gvso/ddjj/parser/declaration"
+	"github.com/InstIDEA/ddjj/parser/declaration"
 )
 
 // Deposits returns the deposits at financial institutions.
-func Deposits(scanner *bufio.Scanner) []*declaration.Deposit {
+func Deposits(scanner *bufio.Scanner) ([]*declaration.Deposit, error) {
 	var skip = []string{
 		"#",
 		"TIPO ENTIDAD",
@@ -73,15 +74,14 @@ func Deposits(scanner *bufio.Scanner) []*declaration.Deposit {
 	totalDeposits := addDeposits(deposits)
 
 	if totalDeposits == 0 {
-		ParserMessage("failed when extracting deposits")
-		return nil
+		return nil, errors.New("failed when extracting deposits")
 	}
 
 	if totalDeposits != total {
-		ParserMessage("deposits do not match")
+		return nil, errors.New("deposits do not match")
 	}
 
-	return deposits
+	return deposits, nil
 }
 
 type depositOpts struct {
