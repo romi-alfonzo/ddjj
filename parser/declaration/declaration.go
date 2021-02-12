@@ -6,12 +6,12 @@ import (
 
 // Declaration is the data on a public official's declaraion
 type Declaration struct {
-	Fecha       time.Time          `json:"fecha"`
-	Cedula      int                `json:"cedula"`
-	Nombre      string             `json:"nombre"`
-	Apellido    string             `json:"apellido"`
-	Cargo       string             `json:"cargo"`
-	Institucion string             `json:"institucion"`
+	Fecha       time.Time `json:"fecha"`
+	Cedula      int       `json:"cedula"`
+	Nombre      string    `json:"nombre"`
+	Apellido    string    `json:"apellido"`
+	Cargo       string    `json:"cargo"`
+	Institucion string    `json:"institucion"`
 
 	// Activos
 	Deposits     []*Deposit      `json:"depositos"`
