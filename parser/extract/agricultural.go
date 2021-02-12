@@ -6,12 +6,10 @@ import (
 	"strings"
 
 	"github.com/gvso/ddjj/parser/declaration"
-
-	"github.com/pkg/errors"
 )
 
 // Agricultural returns the agricultural activity of the official.
-func Agricultural(scanner *bufio.Scanner) ([]*declaration.Agricultural, error) {
+func Agricultural(scanner *bufio.Scanner) []*declaration.Agricultural {
 	var skip = []string{
 		"#",
 		"TIPO ACTIVIDAD",
@@ -76,11 +74,16 @@ func Agricultural(scanner *bufio.Scanner) ([]*declaration.Agricultural, error) {
 	}
 
 	totalAgricultural := addAgricultural(activities)
-	if totalAgricultural != total {
-		return nil, errors.New("agricultural activities do not match")
+	if total == 0 {
+		ParserMessage("failed when extracting agricultural activities")
+		return nil
 	}
 
-	return activities, nil
+	if totalAgricultural != total {
+		ParserMessage("agricultural activities do not match")
+	}
+
+	return activities
 }
 
 type activityOpts struct {

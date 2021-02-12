@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 var countries = map[string]bool{}
@@ -30,8 +31,8 @@ func MoveUntil(scanner *bufio.Scanner, search string, exact bool) *bufio.Scanner
 	return scanner
 }
 
-func getInt(scanner *bufio.Scanner, precedence string, skip int) int {
-	value := getString(scanner, precedence, skip)
+func getInt(scanner *bufio.Scanner, precedence string, t ExpectedValue, exclude *[]int) int {
+	value := getString(scanner, precedence, t, exclude)
 
 	valueInt, err := strconv.Atoi(value)
 	if err != nil {
@@ -41,19 +42,27 @@ func getInt(scanner *bufio.Scanner, precedence string, skip int) int {
 	return valueInt
 }
 
-func getString(scanner *bufio.Scanner, precedence string, skip int) string {
+func getString(scanner *bufio.Scanner, precedence string, t ExpectedValue, exclude *[]int) string {
 	var value string
+	count := 1
+	loop:
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if strings.Contains(line, precedence) {
-			for i := 0; i < skip; i++ {
-				scanner.Scan()
+		if isCurrLine(line, precedence) {
+			for scanner.Scan() {
+				count++
+				if expectedValue(line, precedence, t, exclude, count) {
+					value = getValue(line, precedence)
+					if exclude != nil {
+						*exclude = append(*exclude, count)
+					}
+					break loop
+				}
+				line = scanner.Text()
 			}
-			value = scanner.Text()
-
-			break
 		}
+		count++
 	}
 
 	return strings.TrimSpace(value)
@@ -71,8 +80,8 @@ func contains(s []string, e string) bool {
 func getTotalInCategory(scanner *bufio.Scanner) int64 {
 	scanner.Scan()
 	scanner.Scan()
-	line := strings.ReplaceAll(scanner.Text(), ".", "")
-	i, _ := strconv.ParseInt(line, 10, 64)
+	r := strings.NewReplacer(".", "", ",", "")
+	i, _ := strconv.ParseInt(r.Replace(scanner.Text()), 10, 64)
 
 	return i
 }
@@ -83,14 +92,15 @@ func stringToInt64(line string) int64 {
 
 // StringToInt64 parses a string and make it an int64.
 func StringToInt64(line string) int64 {
-	value := strings.ReplaceAll(line, ".", "")
-	i, _ := strconv.ParseInt(value, 10, 64)
+	r := strings.NewReplacer(".", "", ",", "")
+	i, _ := strconv.ParseInt(r.Replace(line), 10, 64)
 
 	return i
 }
 
 func stringToInt(line string) int {
-	i, _ := strconv.Atoi(line)
+	r := strings.NewReplacer(".", "", ",", "")
+	i, _ := strconv.Atoi(r.Replace(line))
 
 	return i
 }
@@ -120,10 +130,8 @@ func isBarCode(line string) bool {
 }
 
 func isNumber(line string) bool {
-	line = strings.ReplaceAll(line, ".", "")
-	_, err := strconv.ParseInt(line, 10, 64)
-
-	return err == nil
+	matched, _ := regexp.MatchString(`[0-9\.\,]*[0-9]$`, line)
+	return matched
 }
 
 func isCountry(line string) bool {
@@ -147,4 +155,47 @@ func isCountry(line string) bool {
 	countries[line] = true
 
 	return true
+}
+
+func isAlphaNum(line string) bool {
+	matched, _ := regexp.MatchString(`[aA-zZ0-9].*$`, line)
+	return matched
+}
+
+func isCurrLine(line string, startwith string) bool {
+	pattern := fmt.Sprintf("^(%s).*$", startwith)
+	matched, _ := regexp.MatchString(pattern, line)
+	return matched
+}
+
+func expectedValue(value string, precedence string, t ExpectedValue, exclude *[]int, count int) bool {
+	value = getValue(value, precedence)
+
+	if exclude != nil {
+		for _, item := range *exclude {
+			if count == item {
+				return false
+			}
+		}
+	}
+
+	switch (t) {
+		case EVdate:
+			return isDate(value) 
+		case EVnum:
+			return isNumber(value)
+		case EValphaNum:
+			return isAlphaNum(value)
+	}
+	return false
+}
+
+func getValue(value string, precedence string) string {
+	r := strings.NewReplacer(":", "")
+	inline := strings.Split(r.Replace(value), precedence)
+
+	if len(inline) > 1 {
+		return strings.TrimSpace(inline[1])
+	}
+	return value
 }

@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/gvso/ddjj/parser/declaration"
 )
 
@@ -26,7 +24,7 @@ var skipAssets = []string{
 }
 
 // Assets returns other assets owned by the official.
-func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
+func Assets(scanner *bufio.Scanner) []*declaration.OtherAsset {
 	scanner = MoveUntil(scanner, "1.9 OTROS ACTIVOS", true)
 
 	// Also wants to skip item number
@@ -52,15 +50,20 @@ func Assets(scanner *bufio.Scanner) ([]*declaration.OtherAsset, error) {
 	}
 
 	total := addAssets(assets)
+	if total == 0 {
+		ParserMessage("failed when extracting other assets")
+		return nil
+	}
+
 	if total != totalAssets {
-		return nil, errors.New("other assets do not match")
+		ParserMessage("other assets do not match")
 	}
 
 	// Reset variables for next call.
 	totalAssets = 0
 	assetsItemNumber = 0
 
-	return assets, nil
+	return assets
 }
 
 func getAssetValues(scanner *bufio.Scanner, index int, remaining bool) (values [7]string, nextPage bool) {

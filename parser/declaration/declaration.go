@@ -1,41 +1,124 @@
 package declaration
 
 import (
-	"fmt"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Declaration is the data on a public official's declaraion
 type Declaration struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Fecha       time.Time          `json:"fecha" bson:"fecha"`
-	Cedula      int                `json:"cedula" bson:"cedula"`
-	Nombre      string             `json:"nombre" bson:"nombre"`
-	Apellido    string             `json:"appellido" bson:"appellido"`
-	Cargo       string             `json:"cargo" bson:"cargo"`
-	Institucion string             `json:"institucion" bson:"institucion"`
+	Fecha       time.Time          `json:"fecha"`
+	Cedula      int                `json:"cedula"`
+	Nombre      string             `json:"nombre"`
+	Apellido    string             `json:"apellido"`
+	Cargo       string             `json:"cargo"`
+	Institucion string             `json:"institucion"`
 
 	// Activos
-	Deposits     []*Deposit      `json:"depositos" bson:"depositos"`
-	Debtors      []*Debtor       `json:"deudores" bson:"deudores"`
-	RealStates   []*RealState    `json:"inmuebles" bson:"inmuebles"`
-	Vehicles     []*Vehicle      `json:"vehiculos" bson:"vehiculos"`
-	Agricultural []*Agricultural `json:"actividadesAgropecuarias" bson:"actividadesAgropecuarias"`
-	Furniture    []*Furniture    `json:"muebles" bson:"muebles"`
-	OtherAssets  []*OtherAsset   `json:"otrosActivos" bson:"otrosActivos"`
+	Deposits     []*Deposit      `json:"depositos"`
+	Debtors      []*Debtor       `json:"deudores"`
+	RealStates   []*RealState    `json:"inmuebles"`
+	Vehicles     []*Vehicle      `json:"vehiculos"`
+	Agricultural []*Agricultural `json:"actividadesAgropecuarias"`
+	Furniture    []*Furniture    `json:"muebles"`
+	OtherAssets  []*OtherAsset   `json:"otrosActivos"`
 
-	Debts []*Debt `json:"deudas" bson:"deudas"`
+	Debts []*Debt 	`json:"deudas"`
 
-	IncomeMonthly   int64 `json:"ingresosMensual" bson:"ingresosMensual"`
-	IncomeAnnual    int64 `json:"ingresosAnual" bson:"ingresosAnual"`
-	ExpensesMonthly int64 `json:"egresosMensual" bson:"egresosMensual"`
-	ExpensesAnnual  int64 `json:"egresosAnual" bson:"egresosAnual"`
+	IncomeMonthly   int64 `json:"ingresosMensual"`
+	IncomeAnnual    int64 `json:"ingresosAnual"`
+	ExpensesMonthly int64 `json:"egresosMensual"`
+	ExpensesAnnual  int64 `json:"egresosAnual"`
 
-	Assets       int64 `json:"activos" bson:"activos"`
-	Liabilities  int64 `json:"pasivos" bson:"pasivos"`
-	NetPatrimony int64 `json:"patrimonioNeto" bson:"patrimonioNeto"`
+	Assets       int64 `json:"activos"`
+	Liabilities  int64 `json:"pasivos"`
+	NetPatrimony int64 `json:"patrimonioNeto"`
+	
+	Resumen		*Summary		`json:"resumen"`
+}
+
+type Summary struct {
+	TotalActivo		int64	`json:"totalActivo"`
+	TotalPasivo		int64	`json:"totalPasivo"`
+	PatrimonioNeto	int64 `json:"patrimonioNeto"`
+}
+
+// Deposit describes money at a financial institution.
+type Deposit struct {
+	TipoEntidad string `json:"tipoEntidad"`
+	Entidad     string `json:"entidad"`
+	Tipo        string `json:"tipo"`
+	Pais        string `json:"pais"`
+	Importe     int64  `json:"importe"`
+}
+
+// Debtor describes a person that owns money to the official.
+type Debtor struct {
+	Nombre  string `json:"nombre"`
+	Clase   string `json:"clase"`
+	Plazo   int    `json:"plazo"`
+	Importe int64  `json:"importe"`
+}
+
+// RealState is a real state owned by the official.
+type RealState struct {
+	Padron                 string `json:"padron"`
+	Uso                    string `json:"uso"`
+	Pais                   string `json:"pais"`
+	Distrito               string `json:"distrito"`
+	Adquisicion            int    `json:"adquisicion"`
+	TipoAdquisicion        string `json:"tipoAdquisicion"`
+	SuperficieTerreno      int64  `json:"superficieTerreno"`
+	ValorTerreno           int64  `json:"valorTerreno"`
+	SuperficieConstruccion int64  `json:"superficieConstruccion"`
+	ValorConstruccion      int64  `json:"valorConstruccion"`
+	Importe                int64  `json:"importe"`
+}
+
+// Vehicle is a vehicle owned by the official.
+type Vehicle struct {
+	Tipo        string `json:"tipo"`
+	Marca       string `json:"marca"`
+	Modelo      string `json:"modelo"`
+	Adquisicion int    `json:"adquisicion"`
+	Fabricacion int    `json:"fabricacion"`
+	Importe     int64  `json:"importe"`
+}
+
+// Agricultural is an official's agricultural activity.
+type Agricultural struct {
+	Tipo      string `json:"tipo"`
+	Ubicacion string `json:"ubicacion"`
+	Especie   string `json:"especie"`
+	Cantidad  int64  `json:"cantidad"`
+	Precio    int64  `json:"precio"`
+	Importe   int64  `json:"importe"`
+}
+
+// Furniture is a furniture owned by the official.
+type Furniture struct {
+	Tipo    string `json:"tipo"`
+	Importe int64  `json:"importe"`
+}
+
+// OtherAsset is another asset not included in other fields.
+type OtherAsset struct {
+	Descripcion string `json:"descripcion"`
+	Empresa     string `json:"empresa"`
+	RUC         string `json:"ruc"`
+	Pais        string `json:"pais"`
+	Cantidad    int64  `json:"cantidad"`
+	Precio      int64  `json:"precio"`
+	Importe     int64  `json:"importe"`
+}
+
+// Debt is money the official owes to others.
+type Debt struct {
+	Tipo    string `json:"tipo"`
+	Empresa string `json:"empresa"`
+	Plazo   int    `json:"plazo"`
+	Cuota   int64  `json:"cuota"`
+	Total   int64  `json:"total"`
+	Saldo   int64  `json:"saldo"`
 }
 
 // CalculatePatrimony adds up assets and debts.
@@ -80,162 +163,4 @@ func (d *Declaration) AddAssets() int64 {
 	}
 
 	return total
-}
-
-// Deposit describes money at a financial institution.
-type Deposit struct {
-	TipoEntidad string `json:"tipoEntidad" bson:"tipoEntidad"`
-	Entidad     string `json:"entidad" bson:"entidad"`
-	Tipo        string `json:"tipo" bson:"tipo"`
-	Pais        string `json:"pais" bson:"pais"`
-	Importe     int64  `json:"importe" bson:"importe"`
-}
-
-// Debtor describes a person that owns money to the official.
-type Debtor struct {
-	Nombre  string `json:"nombre" bson:"nombre"`
-	Clase   string `json:"clase" bson:"clase"`
-	Plazo   int    `json:"plazo" bson:"plazo"`
-	Importe int64  `json:"importe" bson:"importe"`
-}
-
-// RealState is a real state owned by the official.
-type RealState struct {
-	Padron                 string `json:"padron" bson:"padron"`
-	Uso                    string `json:"uso" bson:"uso"`
-	Pais                   string `json:"pais" bson:"pais"`
-	Distrito               string `json:"distrito" bson:"distrito"`
-	Adquisicion            int    `json:"adquisicion" bson:"adquisicion"`
-	TipoAdquisicion        string `json:"tipoAdquisicion" bson:"tipoAdquisicion"`
-	SuperficieTerreno      int64  `json:"superficieTerreno" bson:"superficieTerreno"`
-	ValorTerreno           int64  `json:"valorTerreno" bson:"valorTerreno"`
-	SuperficieConstruccion int64  `json:"superficieConstruccion" bson:"superficieConstruccion"`
-	ValorConstruccion      int64  `json:"valorConstruccion" bson:"valorConstruccion"`
-	Importe                int64  `json:"importe" bson:"importe"`
-}
-
-// Vehicle is a vehicle owned by the official.
-type Vehicle struct {
-	Tipo        string `json:"tipo" bson:"tipo"`
-	Marca       string `json:"marca" bson:"marca"`
-	Modelo      string `json:"modelo" bson:"modelo"`
-	Adquisicion int    `json:"adquisicion" bson:"adquisicion"`
-	Fabricacion int    `json:"fabricacion" bson:"fabricacion"`
-	Importe     int64  `json:"importe" bson:"importe"`
-}
-
-// Agricultural is an official's agricultural activity.
-type Agricultural struct {
-	Tipo      string `json:"tipo" bson:"tipo"`
-	Ubicacion string `json:"ubicacion" bson:"ubicacion"`
-	Especie   string `json:"especie" bson:"especie"`
-	Cantidad  int64  `json:"cantidad" bson:"cantidad"`
-	Precio    int64  `json:"precio" bson:"precio"`
-	Importe   int64  `json:"importe" bson:"importe"`
-}
-
-// Furniture is a furniture owned by the official.
-type Furniture struct {
-	Tipo    string `json:"tipo" bson:"tipo"`
-	Importe int64  `json:"importe" bson:"importe"`
-}
-
-// OtherAsset is another asset not included in other fields.
-type OtherAsset struct {
-	Descripcion string `json:"descripcion" bson:"descripcion"`
-	Empresa     string `json:"empresa" bson:"empresa"`
-	RUC         string `json:"ruc" bson:"ruc"`
-	Pais        string `json:"pais" bson:"pais"`
-	Cantidad    int64  `json:"cantidad" bson:"cantidad"`
-	Precio      int64  `json:"precio" bson:"precio"`
-	Importe     int64  `json:"importe" bson:"importe"`
-}
-
-// Debt is money the official owes to others.
-type Debt struct {
-	Tipo    string `json:"tipo" bson:"tipo"`
-	Empresa string `json:"empresa" bson:"empresa"`
-	Plazo   int    `json:"plazo" bson:"plazo"`
-	Cuota   int64  `json:"cuota" bson:"cuota"`
-	Total   int64  `json:"total" bson:"total"`
-	Saldo   int64  `json:"saldo" bson:"saldo"`
-}
-
-func (d *Deposit) String() string {
-	return fmt.Sprintf("Tipo Entidad: %s\n"+
-		"Entidad: %s\n"+
-		"Tipo: %s\n"+
-		"Pais: %s\n"+
-		"Importe: %d\n",
-		d.TipoEntidad, d.Entidad, d.Tipo, d.Pais, d.Importe)
-}
-
-func (d *Debtor) String() string {
-	return fmt.Sprintf("Nombre: %s\n"+
-		"Clase: %s\n"+
-		"Plazo: %d\n"+
-		"Importe: %d\n",
-		d.Nombre, d.Clase, d.Plazo, d.Importe)
-}
-
-func (s *RealState) String() string {
-	return fmt.Sprintf("Padron: %s\n"+
-		"Uso: %s\n"+
-		"Pais: %s\n"+
-		"Distrito: %s\n"+
-		"Adquisicion: %d\n"+
-		"TipoAdquisicion: %s\n"+
-		"SuperficieTerreno: %d\n"+
-		"ValorTerreno: %d\n"+
-		"SuperficieConstruccion: %d\n"+
-		"ValorConstruccion: %d\n"+
-		"Importe: %d\n",
-		s.Padron, s.Uso, s.Pais, s.Distrito, s.Adquisicion, s.TipoAdquisicion,
-		s.SuperficieTerreno, s.ValorTerreno, s.SuperficieConstruccion, s.ValorConstruccion,
-		s.Importe)
-}
-
-func (v *Vehicle) String() string {
-	return fmt.Sprintf("Tipo: %s\n"+
-		"Marca: %s\n"+
-		"Modelo: %s\n"+
-		"Importe: %d\n"+
-		"Adquisicion: %d\n"+
-		"Fabricacion: %d\n",
-		v.Tipo, v.Marca, v.Modelo, v.Importe, v.Adquisicion, v.Fabricacion)
-}
-
-func (a *Agricultural) String() string {
-	return fmt.Sprintf("Tipo Actividad: %s\n"+
-		"Ubicación: %s\n"+
-		"Especie: %s\n"+
-		"Cantidad: %d\n"+
-		"Precio: %d\n"+
-		"Importe: %d\n",
-		a.Tipo, a.Ubicacion, a.Especie, a.Cantidad, a.Precio, a.Importe)
-}
-
-func (f *Furniture) String() string {
-	return fmt.Sprintf("Tipo: %s\nImporte:%d\n", f.Tipo, f.Importe)
-}
-
-func (a *OtherAsset) String() string {
-	return fmt.Sprintf("Descripcion: %s\n"+
-		"Empresa: %s\n"+
-		"RUC: %s\n"+
-		"Pais: %s\n"+
-		"Cantidad: %d\n"+
-		"Precio: %d\n"+
-		"Importe: %d\n",
-		a.Descripcion, a.Empresa, a.RUC, a.Pais, a.Cantidad, a.Precio, a.Importe)
-}
-
-func (d *Debt) String() string {
-	return fmt.Sprintf("Tipo: %s\n"+
-		"Empresa: %s\n"+
-		"Plazo: %d\n"+
-		"Cuota: %d\n"+
-		"Total: %d\n"+
-		"Saldo: %d\n",
-		d.Tipo, d.Empresa, d.Plazo, d.Cuota, d.Total, d.Saldo)
 }

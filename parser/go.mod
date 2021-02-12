@@ -1,17 +1,14 @@
 module github.com/gvso/ddjj/parser
 
-go 1.14
+go 1.13
 
 require (
 	code.sajari.com/docconv v1.1.0
 	github.com/JalfResi/justext v0.0.0-20170829062021-c0282dea7198 // indirect
-	github.com/advancedlogic/GoOse v0.0.0-20191112112754-e742535969c1 // indirect
-	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
-	github.com/joho/godotenv v1.3.0
+	github.com/advancedlogic/GoOse v0.0.0-20200830213114-1225d531e0ad // indirect
+	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/levigross/exp-html v0.0.0-20120902181939-8df60c69a8f5 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/sirupsen/logrus v1.4.2
-	go.mongodb.org/mongo-driver v1.3.4
-	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
+	github.com/sirupsen/logrus v1.7.0
+	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
 )

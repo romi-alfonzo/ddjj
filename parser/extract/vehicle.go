@@ -5,13 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/gvso/ddjj/parser/declaration"
 )
 
 // Vehicles returns the public official's vehicles.
-func Vehicles(scanner *bufio.Scanner) ([]*declaration.Vehicle, error) {
+func Vehicles(scanner *bufio.Scanner) []*declaration.Vehicle {
 	var skip = []string{
 		"#",
 		"TIPO VEHÍCULO",
@@ -118,11 +116,16 @@ func Vehicles(scanner *bufio.Scanner) ([]*declaration.Vehicle, error) {
 	}
 
 	totalVehicles := addVehicles(vehicles)
-	if totalVehicles != total {
-		return nil, errors.New("vehicles do not match")
+	if total == 0 {
+		ParserMessage("failed when extracting vehicles")
+		return nil
 	}
 
-	return vehicles, nil
+	if totalVehicles != total {
+		ParserMessage("vehicles do not match")
+	}
+
+	return vehicles
 }
 
 type vehicleOpts struct {
