@@ -3,6 +3,7 @@ package extract
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -57,7 +58,7 @@ func Debts(scanner *bufio.Scanner) ([]*declaration.Debt, error) {
 	}
 
 	if total != totalDebt {
-		return debts, errors.New("The amount in debts do not match (calculated= " + strconv.FormatInt(total, 10) + " in pdf: " + strconv.FormatInt(totalDebt, 10))
+		return debts, fmt.Errorf("the amount in debts do not match (calculated=%d in pdf: %d)", total, totalDebt)
 	}
 
 	// Reset variables for next call.

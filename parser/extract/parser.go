@@ -140,10 +140,7 @@ func ParsePDF(file io.Reader) ParserData {
 
 	// Vehicles
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Vehicles, err = Vehicles(scanner)
-	if err != nil {
-		parser.addError(err)
-	}
+	d.Vehicles = Vehicles(scanner, &parser)
 
 	// Agricultural activity
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
