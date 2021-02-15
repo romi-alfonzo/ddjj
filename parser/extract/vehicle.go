@@ -226,6 +226,9 @@ func getVehicle2(opts *vehicleOpts, line string) *declaration.Vehicle {
 			opts.vehicle.Fabricacion = stringToYear(year)
 		}
 
+		if opts.importesIndex >= len(opts.importes) {
+			return nil
+		}
 		opts.vehicle.Importe = opts.importes[opts.importesIndex]
 		opts.importesIndex++
 

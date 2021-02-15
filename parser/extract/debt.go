@@ -37,6 +37,7 @@ func Debts(scanner *bufio.Scanner) ([]*declaration.Debt, error) {
 	values, nextPage := getDebtValues(scanner, 0, false)
 	for values[0] != "" {
 		debt := getDebt(scanner, values)
+
 		debts = append(debts, debt...)
 
 		if nextPage {
@@ -56,7 +57,7 @@ func Debts(scanner *bufio.Scanner) ([]*declaration.Debt, error) {
 	}
 
 	if total != totalDebt {
-		return nil, errors.New("The amount in debts do not match")
+		return debts, errors.New("The amount in debts do not match (calculated= " + strconv.FormatInt(total, 10) + " in pdf: " + strconv.FormatInt(totalDebt, 10))
 	}
 
 	// Reset variables for next call.
@@ -215,7 +216,7 @@ func getDebt2(scanner *bufio.Scanner, values [6]string, value7 string) []*declar
 }
 
 func getDebt3(scanner *bufio.Scanner, values [6]string, value7 string) []*declaration.Debt {
-	debts := []*declaration.Debt{}
+	var debts []*declaration.Debt
 
 	firstDebt := getDebt1(values)
 	debts = append(debts, firstDebt)
@@ -260,8 +261,11 @@ func getDebt3(scanner *bufio.Scanner, values [6]string, value7 string) []*declar
 
 	values, _ = getDebtValues(scanner, 0, true)
 	for i := 2; i < len(values); i++ {
-		if values[i] == "" {
+		if len(debts) >= i {
 			break
+		}
+		if values[i] == "" {
+			continue
 		}
 
 		debts[index].Saldo = StringToInt64(values[i])
