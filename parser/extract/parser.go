@@ -26,19 +26,19 @@ const (
 	EVnum
 )
 
-func (parser ParserData) addMessage(msg string) {
+func (parser *ParserData) addMessage(msg string) {
 	parser.Message = append(parser.Message, msg)
 }
 
-func (parser ParserData) addError(msg error) {
+func (parser *ParserData) addError(msg error) {
 	parser.Message = append(parser.Message, msg.Error())
 }
 
-func (parser ParserData) rawData(s string) {
+func (parser *ParserData) rawData(s string) {
 	parser.Raw = append(parser.Raw, s)
 }
 
-func (parser ParserData) Print() {
+func (parser *ParserData) Print() {
 	b, err := json.MarshalIndent(parser, "", "\t")
 	if err != nil {
 		fmt.Println("{ message: null, status: 0, data: null, raw: null }")
@@ -47,21 +47,21 @@ func (parser ParserData) Print() {
 	fmt.Println(string(b))
 }
 
-func (parser ParserData) checkStr(val string, err error) string {
+func (parser *ParserData) checkStr(val string, err error) string {
 	if err != nil {
 		parser.addError(err)
 	}
 	return val
 }
 
-func (parser ParserData) checkInt(val int, err error) int {
+func (parser *ParserData) checkInt(val int, err error) int {
 	if err != nil {
 		parser.addError(err)
 	}
 	return val
 }
 
-func (parser ParserData) check(val time.Time, err error) time.Time {
+func (parser *ParserData) check(val time.Time, err error) time.Time {
 	if err != nil {
 		parser.addError(err)
 	}
@@ -140,10 +140,7 @@ func ParsePDF(file io.Reader) ParserData {
 
 	// Vehicles
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Vehicles, err = Vehicles(scanner)
-	if err != nil {
-		parser.addError(err)
-	}
+	d.Vehicles = Vehicles(scanner, &parser)
 
 	// Agricultural activity
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))

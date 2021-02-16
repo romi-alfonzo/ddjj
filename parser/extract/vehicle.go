@@ -3,6 +3,7 @@ package extract
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 )
 
 // Vehicles returns the public official's vehicles.
-func Vehicles(scanner *bufio.Scanner) ([]*declaration.Vehicle, error) {
+func Vehicles(scanner *bufio.Scanner, parser *ParserData) []*declaration.Vehicle {
 	var skip = []string{
 		"#",
 		"TIPO VEHÍCULO",
@@ -93,7 +94,11 @@ func Vehicles(scanner *bufio.Scanner) ([]*declaration.Vehicle, error) {
 				opts.counter = -1
 				break
 			default:
-				v = getVehicle2(opts, line)
+				var err error
+				v, err = getVehicle2(opts, line)
+				if err != nil {
+					parser.addError(err)
+				}
 			}
 		}
 
@@ -118,14 +123,14 @@ func Vehicles(scanner *bufio.Scanner) ([]*declaration.Vehicle, error) {
 
 	totalVehicles := addVehicles(vehicles)
 	if total == 0 {
-		return nil, errors.New("failed when extracting vehicles")
+		parser.addMessage("error extracting vehicles. No total found")
 	}
 
 	if totalVehicles != total {
-		return nil, errors.New("vehicles do not match")
+		parser.addError(fmt.Errorf("error extracting vehicles. vehicles do not match found (calculated=%d in pdf: %d)", totalVehicles, total))
 	}
 
-	return vehicles, nil
+	return vehicles
 }
 
 type vehicleOpts struct {
@@ -195,7 +200,7 @@ func getVehicle1(opts *vehicleOpts, line string) *declaration.Vehicle {
 	return nil
 }
 
-func getVehicle2(opts *vehicleOpts, line string) *declaration.Vehicle {
+func getVehicle2(opts *vehicleOpts, line string) (*declaration.Vehicle, error) {
 	switch opts.counter {
 	case 0:
 		opts.vehicle.Tipo = line
@@ -226,13 +231,16 @@ func getVehicle2(opts *vehicleOpts, line string) *declaration.Vehicle {
 			opts.vehicle.Fabricacion = stringToYear(year)
 		}
 
+		if opts.importesIndex >= len(opts.importes) {
+			return nil, errors.New("The vehicle in line: '" + line + "' has a issue with importe")
+		}
 		opts.vehicle.Importe = opts.importes[opts.importesIndex]
 		opts.importesIndex++
 
-		return opts.vehicle
+		return opts.vehicle, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 func addVehicles(vehicles []*declaration.Vehicle) int64 {
