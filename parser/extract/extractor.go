@@ -2,12 +2,227 @@ package extract
 
 import (
 	"bufio"
-	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"fmt"
 )
+
+type Extractor struct {
+	Scanner *bufio.Scanner
+	RawData string
+
+	PrevToken string
+	CurrToken string
+	NextToken string
+
+	CurrLine int
+	SavedLine int
+
+	Flags ExtractorFlag
+}
+
+type TokenType int
+
+const (
+	PrevToken = iota
+	CurrToken
+	NextToken
+	MaxTokens
+)
+
+type ExtractorFlag int
+
+const (
+	// the tokens skip blank lines
+	EXTRACTOR_FLAG_1 = 1<<(iota + 1)
+)
+
+func NewExtractor(raw string) *Extractor {
+	return &Extractor{
+		RawData: raw,
+		Scanner: bufio.NewScanner(strings.NewReader(raw)),
+	}
+}
+
+func (e *Extractor) Scan() bool {
+
+	scan := func(s *bufio.Scanner) (string, bool) {
+		for s.Scan() {
+			if e.Flags & EXTRACTOR_FLAG_1 != 0 {
+				if s.Text() == "" {
+					continue
+				}
+			}
+			return s.Text(), true
+		}
+		return "", false
+	}
+
+	e.PrevToken = e.CurrToken
+	e.CurrToken = e.NextToken
+	val, status := scan(e.Scanner)
+	e.NextToken = val
+
+	// EOF
+	if !status && 
+	e.CurrToken == "" && 
+	e.Scanner.Err() == nil {
+		return false
+	}
+
+	e.CurrLine++
+	return true
+}
+
+func (e *Extractor) MoveUntilContains(t TokenType, s string) bool {
+	tokens := [MaxTokens]*string { &e.PrevToken, &e.CurrToken, &e.NextToken }
+	for e.Scan() {
+		if strings.Contains(*tokens[t], s) {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *Extractor) MoveUntilStartWith(t TokenType, s string) bool {
+	tokens := [MaxTokens]*string { &e.PrevToken, &e.CurrToken, &e.NextToken }
+	for e.Scan() {
+		if isCurrLine(*tokens[t], s) {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *Extractor) MoveUntilSavedLine() {
+	e.Rewind()
+	for e.Scan() {
+		if e.CurrLine == e.SavedLine {
+			break	
+		}
+	}
+}
+
+func (e *Extractor) Rewind() {
+	e.Scanner = bufio.NewScanner(strings.NewReader(e.RawData))
+	e.CurrLine = 0
+	e.PrevToken = ""
+	e.CurrToken = ""
+	e.NextToken = ""
+}
+
+func (e *Extractor) PrevLineNum() int {
+	value := e.CurrLine - 1
+	if value < 0 {
+		return 0
+	}
+	return value
+}
+
+func (e *Extractor) CurrLineNum() int {
+	return e.CurrLine
+}
+
+func (e *Extractor) NextLineNum() int {
+	return e.CurrLine + 1
+}
+
+func (e *Extractor) SaveLine() {
+	e.SavedLine = e.CurrLine
+}
+
+func (e *Extractor) BindFlag(flag ExtractorFlag) {
+	e.Flags |= flag
+}
+
+func (e *Extractor) UnbindFlag(flag ExtractorFlag) {
+	e.Flags &= flag
+}
+
+func (e *Extractor) UnbindAllFlags(flag ExtractorFlag) {
+	e.Flags = 0
+}
+
+func ContainsItem(s []string, e string) bool {
+	for _, a := range s {
+		if strings.Contains(e, a) {
+			return true
+		}
+	}
+	return false
+}
+
+func ContainsIntItem(s []int, e int) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func StringToInt64(line string) int64 {
+	r := strings.NewReplacer(".", "", ",", "")
+	i, _ := strconv.ParseInt(r.Replace(line), 10, 64)
+
+	return i
+}
+
+func stringToInt(line string) int {
+	r := strings.NewReplacer(".", "", ",", "")
+	i, _ := strconv.Atoi(r.Replace(line))
+
+	return i
+}
+
+func isCurrLine(line string, startwith string) bool {
+	pattern := fmt.Sprintf("^(%s).*$", startwith)
+	matched, _ := regexp.MatchString(pattern, line)
+	return matched
+}
+
+func isDate(line string) bool {
+	matched, _ := regexp.MatchString(`[0-9]{2}/[0-9]{2}/[0-9]{4}`, line)
+	return matched
+}
+
+func isAlpha(line string) bool {
+	matched, _ := regexp.MatchString(`[aA-zZ].*$`, line)
+	return matched
+}
+
+func isAlphaNum(line string) bool {
+	matched, _ := regexp.MatchString(`[aA-zZ0-9].*$`, line)
+	return matched
+}
+
+func isNumber(line string) bool {
+	matched, _ := regexp.MatchString(`^[\+\-]*[0-9.,]*[0-9]$`, line)
+	return matched
+}
+
+func isKeyValuePair(key string, precedence string) (string, bool) {
+	r := strings.NewReplacer(":", "")
+	inline := strings.Split(r.Replace(key), precedence)
+
+	if len(inline) > 1 {
+		value := strings.TrimSpace(inline[len(inline) -1])
+		if value != "" {
+			return value, true
+		}
+	}
+	return key, false
+}
+
+/*
+legacy code support
+don't use these functions
+use extractor struct and methods instead
+
+the extractions that using these functions will be reviewed
+*/
 
 var countries = map[string]bool{}
 
@@ -31,41 +246,13 @@ func MoveUntil(scanner *bufio.Scanner, search string, exact bool) *bufio.Scanner
 	return scanner
 }
 
-func getInt(scanner *bufio.Scanner, precedence string, t ExpectedValue, exclude *[]int) int {
-	value := getString(scanner, precedence, t, exclude)
+func getTotalInCategory(scanner *bufio.Scanner) int64 {
+	scanner.Scan()
+	scanner.Scan()
+	r := strings.NewReplacer(".", "", ",", "")
+	i, _ := strconv.ParseInt(r.Replace(scanner.Text()), 10, 64)
 
-	valueInt, err := strconv.Atoi(value)
-	if err != nil {
-		return 0
-	}
-
-	return valueInt
-}
-
-func getString(scanner *bufio.Scanner, precedence string, t ExpectedValue, exclude *[]int) string {
-	var value string
-	count := 1
-loop:
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if isCurrLine(line, precedence) {
-			for scanner.Scan() {
-				count++
-				if expectedValue(line, precedence, t, exclude, count) {
-					value = getValue(line, precedence)
-					if exclude != nil {
-						*exclude = append(*exclude, count)
-					}
-					break loop
-				}
-				line = scanner.Text()
-			}
-		}
-		count++
-	}
-
-	return strings.TrimSpace(value)
+	return i
 }
 
 func contains(s []string, e string) bool {
@@ -77,32 +264,8 @@ func contains(s []string, e string) bool {
 	return false
 }
 
-func getTotalInCategory(scanner *bufio.Scanner) int64 {
-	scanner.Scan()
-	scanner.Scan()
-	r := strings.NewReplacer(".", "", ",", "")
-	i, _ := strconv.ParseInt(r.Replace(scanner.Text()), 10, 64)
-
-	return i
-}
-
 func stringToInt64(line string) int64 {
 	return StringToInt64(line)
-}
-
-// StringToInt64 parses a string and make it an int64.
-func StringToInt64(line string) int64 {
-	r := strings.NewReplacer(".", "", ",", "")
-	i, _ := strconv.ParseInt(r.Replace(line), 10, 64)
-
-	return i
-}
-
-func stringToInt(line string) int {
-	r := strings.NewReplacer(".", "", ",", "")
-	i, _ := strconv.Atoi(r.Replace(line))
-
-	return i
 }
 
 func stringToYear(line string) int {
@@ -119,18 +282,8 @@ func stringToYear(line string) int {
 	return year
 }
 
-func isDate(line string) bool {
-	matched, _ := regexp.MatchString(`[0-9]{2}/[0-9]{2}/[0-9]{4}`, line)
-	return matched
-}
-
 func isBarCode(line string) bool {
 	matched, _ := regexp.MatchString(`[0-9]{5,6}-[0-9]{5,7}-[0-9]{1,3}`, line)
-	return matched
-}
-
-func isNumber(line string) bool {
-	matched, _ := regexp.MatchString(`[0-9.,]*[0-9]$`, line)
 	return matched
 }
 
@@ -155,47 +308,4 @@ func isCountry(line string) bool {
 	countries[line] = true
 
 	return true
-}
-
-func isAlphaNum(line string) bool {
-	matched, _ := regexp.MatchString(`[aA-zZ0-9].*$`, line)
-	return matched
-}
-
-func isCurrLine(line string, startwith string) bool {
-	pattern := fmt.Sprintf("^(%s).*$", startwith)
-	matched, _ := regexp.MatchString(pattern, line)
-	return matched
-}
-
-func expectedValue(value string, precedence string, t ExpectedValue, exclude *[]int, count int) bool {
-	value = getValue(value, precedence)
-
-	if exclude != nil {
-		for _, item := range *exclude {
-			if count == item {
-				return false
-			}
-		}
-	}
-
-	switch t {
-	case EVdate:
-		return isDate(value)
-	case EVnum:
-		return isNumber(value)
-	case EValphaNum:
-		return isAlphaNum(value)
-	}
-	return false
-}
-
-func getValue(value string, precedence string) string {
-	r := strings.NewReplacer(":", "")
-	inline := strings.Split(r.Replace(value), precedence)
-
-	if len(inline) > 1 {
-		return strings.TrimSpace(inline[1])
-	}
-	return value
 }
