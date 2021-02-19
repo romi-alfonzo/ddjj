@@ -124,6 +124,47 @@ func TestMariaLorenaRiverosMiranda2015(t *testing.T) {
 	//AssertEqual(t, int64(30000000), data.Data.Debts[2].Saldo)
 }
 
+func TestLilianSamaniego2016(t *testing.T) {
+
+	// program freeze after input
+	// with this version and 1.0.0
+	// https://github.com/InstIDEA/ddjj/releases/tag/1.0.0
+
+	// with previus version return zero values
+	// https://github.com/Ravf95/ddjj/tree/feature/local_mode/parser
+	
+	data := handleSingleFile("./test_declarations/78832_LILIAN_MARLENE_SAMANIEGO_BENEGA.pdf")
+
+	if data.Data == nil {
+		t.Errorf("Error parsing the document")
+	}
+	
+	data.Print()
+
+	AssertEqual(t, "LILIAN MARLENE", data.Data.Nombre)
+	AssertEqual(t, "2016-10-07", data.Data.Fecha.Format("2006-01-02"))
+}
+
+func TestNataliaDure2019(t *testing.T) {
+	// program freeze after input
+	// with this version and 1.0.0
+	// https://github.com/InstIDEA/ddjj/releases/tag/1.0.0
+
+	// with previus version return zero values
+	// https://github.com/Ravf95/ddjj/tree/feature/local_mode/parser
+	
+	data := handleSingleFile("./test_declarations/592859_NATALIA_ELIZABETH_DURE_CARDOZO.pdf")
+	
+	if data.Data == nil {
+		t.Errorf("Error parsing the document")
+	}
+	
+	data.Print()
+
+	AssertEqual(t, "NATALIA ELIZABETH", data.Data.Nombre)
+	AssertEqual(t, "2019-03-07", data.Data.Fecha.Format("2006-01-02"))
+}
+
 // AssertEqual checks if values are equal
 func AssertEqual(t *testing.T, want interface{}, got interface{}) {
 	if want == got {
