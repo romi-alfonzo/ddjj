@@ -178,7 +178,25 @@ func stringToInt(line string) int {
 }
 
 func isCurrLine(line string, startwith string) bool {
-	pattern := fmt.Sprintf("^(%s).*$", startwith)
+	pattern := fmt.Sprintf(`^(%s).*$`, startwith)
+	matched, _ := regexp.MatchString(pattern, line)
+	return matched
+}
+
+func endsWith(line string, s string) bool {
+	pattern := fmt.Sprintf(`.*(%s)$`, s)
+	matched, _ := regexp.MatchString(pattern, line)
+	return matched
+}
+
+func hasTrailingSpaces(line string, s string) bool {
+	pattern := fmt.Sprintf(`(%s)\s\s*`, s)
+	matched, _ := regexp.MatchString(pattern, line)
+	return matched
+} 
+
+func hasLeadingSpaces(line string, s string) bool {
+	pattern := fmt.Sprintf(`\s\s*(%s)`, s)
 	matched, _ := regexp.MatchString(pattern, line)
 	return matched
 }
@@ -214,6 +232,40 @@ func isKeyValuePair(key string, precedence string) (string, bool) {
 		}
 	}
 	return key, false
+}
+
+// call after isNumber
+func isAddressStreet(s string) bool {
+	contains := []string { "N°", "CASI", "E/", "CALLE", "C/", "AVDA.", 
+	"AV.", "RUTA", "KM", "ENTRE", "ESQ.", "PISO", "BLOQUE", "PLANTA" }
+
+	for _, value := range contains {
+		if strings.Contains(s, value) {
+			return true
+		}
+	}
+
+	matched, _ := regexp.MatchString(`[0-9]{3,4}`, s)
+	if matched {
+		return true
+	}
+
+	return false
+}
+
+// call after isNumber
+func isPhoneNumber(s string) bool {
+	matched, _ := regexp.MatchString(`(\()[0-9].*(\))|[0-9\s]*[0-9\-\/\.]`, s)
+
+	if matched {
+		return true
+	}
+	return false
+}
+
+func removeAccents(s string) string {
+	r := strings.NewReplacer("Á", "A", "É", "E", "Í", "I", "Ó", "O", "Ú", "U" )
+	return r.Replace(s)
 }
 
 /*
