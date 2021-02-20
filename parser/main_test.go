@@ -22,12 +22,18 @@ func TestMarioAbdo2016(t *testing.T) {
 	fmt.Printf("\n\n")
 	fmt.Println("Nombre: ", data.Data.Nombre)
 	fmt.Println("Fecha: ", data.Data.Fecha)
+	fmt.Println("Conyuge: ", data.Data.Conyuge)
+	fmt.Println("Cargo: ", data.Data.Instituciones[0].Cargo)
+	fmt.Println("Institucion: ", data.Data.Instituciones[0].Institucion)
 	fmt.Println("Resumen Activos: ", data.Data.Resumen.TotalActivo)
 	fmt.Println("Resumen Pasivos: ", data.Data.Resumen.TotalPasivo)
 	fmt.Println("Resumen Patrimonio Neto: ", data.Data.Resumen.PatrimonioNeto)
 
 	AssertEqual(t, "MARIO", data.Data.Nombre)
 	AssertEqual(t, "2016-07-13", data.Data.Fecha.Format("2006-01-02"))
+	AssertEqual(t, "SENADOR NACIONAL", data.Data.Instituciones[0].Cargo)
+	AssertEqual(t, "CONGRESO NACIONAL", data.Data.Instituciones[0].Institucion)
+	AssertEqual(t, "SILVANA MARIA AUXILIADORA LOPEZ MOREIRA BO", data.Data.Conyuge)
 	AssertEqual(t, int64(3263852172), data.Data.Resumen.TotalActivo)
 	AssertEqual(t, int64(241094919), data.Data.Resumen.TotalPasivo)
 	AssertEqual(t, int64(3022757253), data.Data.Resumen.PatrimonioNeto)
@@ -122,6 +128,47 @@ func TestMariaLorenaRiverosMiranda2015(t *testing.T) {
 	//AssertEqual(t, int64(189000), data.Data.Debts[2].Cuota)
 	//AssertEqual(t, int64(30000000), data.Data.Debts[2].Total)
 	//AssertEqual(t, int64(30000000), data.Data.Debts[2].Saldo)
+}
+
+func TestLilianSamaniego2016(t *testing.T) {
+
+	// program freeze after input
+	// with this version and 1.0.0
+	// https://github.com/InstIDEA/ddjj/releases/tag/1.0.0
+
+	// with previus version return zero values
+	// https://github.com/Ravf95/ddjj/tree/feature/local_mode/parser
+	
+	data := handleSingleFile("./test_declarations/78832_LILIAN_MARLENE_SAMANIEGO_BENEGA.pdf")
+
+	if data.Data == nil {
+		t.Errorf("Error parsing the document")
+	}
+	
+	data.Print()
+
+	AssertEqual(t, "LILIAN MARLENE", data.Data.Nombre)
+	AssertEqual(t, "2016-10-07", data.Data.Fecha.Format("2006-01-02"))
+}
+
+func TestNataliaDure2019(t *testing.T) {
+	// program freeze after input
+	// with this version and 1.0.0
+	// https://github.com/InstIDEA/ddjj/releases/tag/1.0.0
+
+	// with previus version return zero values
+	// https://github.com/Ravf95/ddjj/tree/feature/local_mode/parser
+	
+	data := handleSingleFile("./test_declarations/592859_NATALIA_ELIZABETH_DURE_CARDOZO.pdf")
+	
+	if data.Data == nil {
+		t.Errorf("Error parsing the document")
+	}
+	
+	data.Print()
+
+	AssertEqual(t, "NATALIA ELIZABETH", data.Data.Nombre)
+	AssertEqual(t, "2019-03-07", data.Data.Fecha.Format("2006-01-02"))
 }
 
 // AssertEqual checks if values are equal

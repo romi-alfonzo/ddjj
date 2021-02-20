@@ -10,8 +10,10 @@ type Declaration struct {
 	Cedula      int       `json:"cedula"`
 	Nombre      string    `json:"nombre"`
 	Apellido    string    `json:"apellido"`
-	Cargo       string    `json:"cargo"`
-	Institucion string    `json:"institucion"`
+
+	Conyuge string `json:"conyuge"`
+
+	Instituciones []*Job `json:"instituciones"`
 
 	// Activos
 	Deposits     []*Deposit      `json:"depositos"`
@@ -34,6 +36,11 @@ type Declaration struct {
 	NetPatrimony int64 `json:"patrimonioNeto"`
 
 	Resumen *Summary `json:"resumen"`
+}
+
+type Job struct {
+	Cargo       string `json:"cargo"`
+	Institucion string `json:"institucion"`
 }
 
 type Summary struct {

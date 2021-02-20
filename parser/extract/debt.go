@@ -145,7 +145,7 @@ func getDebt2(scanner *bufio.Scanner, values [6]string, value7 string) []*declar
 	counter := 0
 	index := 0
 	values, nextPage := getDebtValues(scanner, index, true)
-	for !isNumber(values[5]) && !nextPage {
+	for values[5] != "" && !isNumber(values[5]) && !nextPage {
 		// Shift to the right by 1 and do not get the last value since it's the
 		// business for the next item.
 		var v [6]string

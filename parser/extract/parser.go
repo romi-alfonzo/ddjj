@@ -18,14 +18,6 @@ type ParserData struct {
 	Raw     []string                 `json:"raw"`
 }
 
-type ExpectedValue int
-
-const (
-	EVdate ExpectedValue = iota
-	EValphaNum
-	EVnum
-)
-
 func (parser *ParserData) addMessage(msg string) {
 	parser.Message = append(parser.Message, msg)
 }
@@ -95,30 +87,22 @@ func ParsePDF(file io.Reader) ParserData {
 
 	parser.rawData(res.Body)
 
-	body := &res.Body
-	d := &declaration.Declaration{}
+	d := &declaration.Declaration{}	
 
 	// Basic Info.
-	scanner := bufio.NewScanner(strings.NewReader(res.Body))
-	d.Fecha = parser.check(Date(scanner))
+	d.Fecha = parser.check(Date(NewExtractor(res.Body)))
+	d.Cedula = parser.checkInt(Cedula(NewExtractor(res.Body)))
+	d.Nombre = parser.checkStr(Name(NewExtractor(res.Body)))
+	d.Apellido = parser.checkStr(Lastname(NewExtractor(res.Body)))
 
-	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Cedula = parser.checkInt(Cedula(scanner))
+	// Spouse
+	d.Conyuge = parser.checkStr(Spouse(NewExtractor(res.Body)))
 
-	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Nombre = parser.checkStr(Name(scanner))
-
-	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Apellido = parser.checkStr(Lastname(scanner))
-
-	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Institucion = parser.checkStr(Institution(scanner))
-
-	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.Cargo = parser.checkStr(JobTitle(scanner))
+	// Jobs
+	d.Instituciones = Jobs(NewExtractor(res.Body), &parser)
 
 	// Deposits
-	scanner = bufio.NewScanner(strings.NewReader(res.Body))
+	scanner := bufio.NewScanner(strings.NewReader(res.Body))
 	d.Deposits, err = Deposits(scanner)
 	if err != nil {
 		parser.addError(err)
@@ -184,7 +168,7 @@ func ParsePDF(file io.Reader) ParserData {
 	d.ExpensesAnnual = AnnualExpenses(scanner)
 
 	// Summary
-	d.Resumen = GetSummary(body)
+	d.Resumen = Summary(NewExtractor(res.Body), &parser)
 
 	d.CalculatePatrimony()
 

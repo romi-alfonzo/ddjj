@@ -1,23 +1,39 @@
 package extract
 
 import (
-	"bufio"
 	"github.com/InstIDEA/ddjj/parser/declaration"
-	"strings"
+	"fmt"
 )
 
-func GetSummary(body *string) *declaration.Summary {
-	r := &declaration.Summary{}
-	exclude := &[]int{}
+func Summary(e *Extractor, parser *ParserData) *declaration.Summary {
+	var index int
 
-	scanner := bufio.NewScanner(strings.NewReader(*body))
-	r.TotalActivo = StringToInt64(getString(scanner, "TOTAL ACTIVO", EVnum, exclude))
+	results := [3]int64{ -1, -1, -1 }
+	e.BindFlag(EXTRACTOR_FLAG_1)
 
-	scanner = bufio.NewScanner(strings.NewReader(*body))
-	r.TotalPasivo = StringToInt64(getString(scanner, "TOTAL PASIVO", EVnum, exclude))
+	if e.MoveUntilContains(CurrToken, "RESUMEN") {
+		for e.Scan() {
+			if index > 2 {
+				break
+			}
 
-	scanner = bufio.NewScanner(strings.NewReader(*body))
-	r.PatrimonioNeto = StringToInt64(getString(scanner, "PATRIMONIO NETO", EVnum, exclude))
+			if isNumber(e.CurrToken) {
+				results[index] = StringToInt64(e.CurrToken)
+				index++
+			}
+		}
+	}
 
-	return r
+	if results[0] == -1 &&
+	results[1] == -1 &&
+	results[2] == -1 {
+		parser.addError(fmt.Errorf("failed when extracting summary"))
+		return nil
+	}
+
+	return &declaration.Summary{
+		TotalActivo: results[0],
+		TotalPasivo: results[1],
+		PatrimonioNeto: results[2],
+	}
 }
