@@ -96,7 +96,7 @@ func ParsePDF(file io.Reader) ParserData {
 	d.Apellido = parser.checkStr(Lastname(NewExtractor(res.Body)))
 
 	// Spouse
-	d.Spouse = parser.checkStr(Spouse(NewExtractor(res.Body)))
+	d.Conyuge = parser.checkStr(Spouse(NewExtractor(res.Body)))
 
 	// Jobs
 	d.Instituciones = Jobs(NewExtractor(res.Body), &parser)

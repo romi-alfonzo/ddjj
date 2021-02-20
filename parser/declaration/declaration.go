@@ -11,7 +11,7 @@ type Declaration struct {
 	Nombre      string    `json:"nombre"`
 	Apellido    string    `json:"apellido"`
 
-	Spouse string `json:"conyuge"`
+	Conyuge string `json:"conyuge"`
 
 	Instituciones []*Job `json:"instituciones"`
 
