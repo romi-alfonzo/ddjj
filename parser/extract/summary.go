@@ -2,6 +2,7 @@ package extract
 
 import (
 	"github.com/InstIDEA/ddjj/parser/declaration"
+	"strings"
 	"fmt"
 )
 
@@ -15,6 +16,13 @@ func Summary(e *Extractor, parser *ParserData) *declaration.Summary {
 		for e.Scan() {
 			if index > 2 {
 				break
+			}
+
+			if strings.Contains(e.CurrToken, "página") &&
+			!hasLeadingSpaces(e.CurrToken, "página") &&
+			!hasTrailingSpaces(e.CurrToken, "página") {
+				e.MoveUntilContains(CurrToken, "DECLARACIÓN")
+				continue
 			}
 
 			if isNumber(e.CurrToken) {
