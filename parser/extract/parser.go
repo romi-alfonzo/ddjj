@@ -172,16 +172,18 @@ func ParsePDF(file io.Reader) ParserData {
 
 	d.CalculatePatrimony()
 
-	if d.Assets != d.Resumen.TotalActivo {
-		parser.addMessage("calculated assets and summary assets does not match")
-	}
-
-	if d.Liabilities != d.Resumen.TotalPasivo {
-		parser.addMessage("calculated liabilities and summary liabilities does not match")
-	}
-
-	if d.NetPatrimony != d.Resumen.PatrimonioNeto {
-		parser.addMessage("calculated net patrimony and summary net patrimony does not match")
+	if d.Resumen != nil {
+		if d.Assets != d.Resumen.TotalActivo {
+			parser.addMessage("calculated assets and summary assets does not match")
+		}
+	
+		if d.Liabilities != d.Resumen.TotalPasivo {
+			parser.addMessage("calculated liabilities and summary liabilities does not match")
+		}
+	
+		if d.NetPatrimony != d.Resumen.PatrimonioNeto {
+			parser.addMessage("calculated net patrimony and summary net patrimony does not match")
+		}
 	}
 
 	parser.Data = d
