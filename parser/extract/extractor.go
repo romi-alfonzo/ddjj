@@ -2,7 +2,6 @@ package extract
 
 import (
 	"bufio"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -276,8 +275,6 @@ use extractor struct and methods instead
 the extractions that using these functions will be reviewed
 */
 
-var countries = map[string]bool{}
-
 // MoveUntil finds a word and stops the scan there.
 func MoveUntil(scanner *bufio.Scanner, search string, exact bool) *bufio.Scanner {
 	for scanner.Scan() {
@@ -337,27 +334,4 @@ func stringToYear(line string) int {
 func isBarCode(line string) bool {
 	matched, _ := regexp.MatchString(`[0-9]{5,6}-[0-9]{5,7}-[0-9]{1,3}`, line)
 	return matched
-}
-
-func isCountry(line string) bool {
-
-	if _, ok := countries[line]; ok {
-		return true
-	}
-
-	resp, err := http.Get("https://restcountries.eu/rest/v2/name/" + line)
-
-	if err != nil {
-		return false
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 404 {
-		return false
-	}
-
-	countries[line] = true
-
-	return true
 }
