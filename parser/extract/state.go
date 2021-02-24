@@ -9,7 +9,7 @@ import (
 	"github.com/InstIDEA/ddjj/parser/declaration"
 )
 
-var countryCache = map[string]bool{}
+var countriesCache = map[string]bool{}
 
 var stateTwoLines = []string{
 	"EXPLOTACION",
@@ -50,7 +50,7 @@ func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
 	index := 0
 	stateItemNumber = 1
 
-	countryCache = getCountryCache()
+	countriesCache = getCountryCache()
 
 	// Also wants to skip item number
 	skipState = append(skipState, strconv.Itoa(stateItemNumber))
@@ -97,7 +97,7 @@ func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
 func getState(scanner *bufio.Scanner, values [11]string) []*declaration.RealState {
 
 	// Casos 1, 4, 5.
-	if countryCache[removeAccents(strings.ToUpper(values[0]))] {
+	if countriesCache[removeAccents(strings.ToUpper(values[0]))] {
 		// En el caso 1, el valor en el último index es el tipo de adquisición.
 		if !isNumber(values[10]) {
 			return getState1(values)
