@@ -50,7 +50,7 @@ func RealStates(scanner *bufio.Scanner) ([]*declaration.RealState, error) {
 	index := 0
 	stateItemNumber = 1
 
-	countriesCache = getCountryCache()
+	countriesCache = getCountriesCache()
 
 	// Also wants to skip item number
 	skipState = append(skipState, strconv.Itoa(stateItemNumber))
@@ -317,7 +317,7 @@ func addRealState(states []*declaration.RealState) int64 {
 	return total
 }
 
-func getCountryCache() map[string]bool {
+func getCountriesCache() map[string]bool {
 	// countries
 	// extracted from https://www.ine.es/daco/daco42/clasificaciones/paises_estandar.xls
 	countries := [237]string{"AFGANISTAN","ALBANIA","ALEMANIA","ANDORRA","ANGOLA","ANGUILLA","ANTIGUA Y BARBUDA","ANTILLAS HOLANDESAS",
