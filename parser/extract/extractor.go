@@ -18,6 +18,8 @@ type Extractor struct {
 
 	CurrLine int
 	SavedLine int
+	
+	Buffer []string
 
 	Flags ExtractorFlag
 }
@@ -36,6 +38,12 @@ type ExtractorFlag int
 const (
 	// the tokens skip blank lines
 	EXTRACTOR_FLAG_1 = 1<<(iota + 1)
+	
+	// trim leading and trailing spaces from tokens
+	EXTRACTOR_FLAG_2
+
+	// line tokenizer
+	EXTRACTOR_FLAG_3
 )
 
 func NewExtractor(raw string) *Extractor {
@@ -48,14 +56,36 @@ func NewExtractor(raw string) *Extractor {
 func (e *Extractor) Scan() bool {
 
 	scan := func(s *bufio.Scanner) (string, bool) {
+		text := ""
+
+		if e.Flags & EXTRACTOR_FLAG_3 != 0 &&
+		len(e.Buffer) > 1 {
+			text = e.Buffer[1]
+			e.Buffer = e.Buffer[1:]
+			return text, true
+		}
+
 		for s.Scan() {
+			text = s.Text()
 			if e.Flags & EXTRACTOR_FLAG_1 != 0 {
-				if s.Text() == "" {
+				if text == "" {
 					continue
 				}
 			}
-			return s.Text(), true
+
+			if e.Flags & EXTRACTOR_FLAG_2 != 0 {
+				text = strings.TrimSpace(text)
+			}
+
+			if e.Flags & EXTRACTOR_FLAG_3 != 0 &&
+			text != "" {
+				e.Buffer = tokenize(text, 3)
+				text = e.Buffer[0]
+			}
+
+			return text, true
 		}
+
 		return "", false
 	}
 
@@ -265,6 +295,34 @@ func isPhoneNumber(s string) bool {
 func removeAccents(s string) string {
 	r := strings.NewReplacer("Á", "A", "É", "E", "Í", "I", "Ó", "O", "Ú", "U" )
 	return r.Replace(s)
+}
+
+// split a line into words that not exceed the max continuous spaces
+func tokenize(line string, max int) []string {
+	var tokens []string
+	var buffer strings.Builder
+	var spaces int
+
+	line = strings.TrimSpace(line)
+	for _, letter := range line {
+		if letter == ' ' {
+			spaces++
+			buffer.WriteRune(letter)
+			continue
+		}
+
+		if spaces >= max {
+			token := strings.TrimSpace(buffer.String())
+			if token != "" {	
+				tokens = append(tokens, token)
+			}
+			buffer.Reset()
+		}
+		spaces = 0
+		buffer.WriteRune(letter)
+	}
+	tokens = append(tokens, strings.TrimSpace(buffer.String()))
+	return tokens
 }
 
 /*
