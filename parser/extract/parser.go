@@ -77,7 +77,7 @@ func ParsePDF(file io.Reader) ParserData {
 		Data:    nil,
 		Raw:     make([]string, 0),
 	}
-	res, err := docconv.Convert(file, "application/pdf", true)
+	res, err := docconv.Convert(file, "application/pdf", false)
 
 	if err != nil {
 		parser.addError(err)
