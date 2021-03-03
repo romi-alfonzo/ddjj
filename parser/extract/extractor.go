@@ -136,6 +136,7 @@ func (e *Extractor) MoveUntilSavedLine() {
 
 func (e *Extractor) Rewind() {
 	e.Scanner = bufio.NewScanner(strings.NewReader(e.RawData))
+	e.Buffer = []string{}
 	e.CurrLine = 0
 	e.PrevToken = ""
 	e.CurrToken = ""
