@@ -39,7 +39,7 @@ const (
 	// the tokens skip blank lines
 	EXTRACTOR_FLAG_1 = 1<<(iota + 1)
 	
-	// trim leading and trailing spaces from tokens
+	// remove begin and end spaces from tokens
 	EXTRACTOR_FLAG_2
 
 	// line tokenizer
