@@ -2,7 +2,6 @@ package extract
 
 import (
 	"bufio"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,6 +18,8 @@ type Extractor struct {
 
 	CurrLine int
 	SavedLine int
+	
+	Buffer []string
 
 	Flags ExtractorFlag
 }
@@ -37,6 +38,12 @@ type ExtractorFlag int
 const (
 	// the tokens skip blank lines
 	EXTRACTOR_FLAG_1 = 1<<(iota + 1)
+	
+	// remove begin and end spaces from tokens
+	EXTRACTOR_FLAG_2
+
+	// line tokenizer
+	EXTRACTOR_FLAG_3
 )
 
 func NewExtractor(raw string) *Extractor {
@@ -49,14 +56,36 @@ func NewExtractor(raw string) *Extractor {
 func (e *Extractor) Scan() bool {
 
 	scan := func(s *bufio.Scanner) (string, bool) {
+		text := ""
+
+		if e.Flags & EXTRACTOR_FLAG_3 != 0 &&
+		len(e.Buffer) > 1 {
+			text = e.Buffer[1]
+			e.Buffer = e.Buffer[1:]
+			return text, true
+		}
+
 		for s.Scan() {
+			text = s.Text()
 			if e.Flags & EXTRACTOR_FLAG_1 != 0 {
-				if s.Text() == "" {
+				if text == "" {
 					continue
 				}
 			}
-			return s.Text(), true
+
+			if e.Flags & EXTRACTOR_FLAG_2 != 0 {
+				text = strings.TrimSpace(text)
+			}
+
+			if e.Flags & EXTRACTOR_FLAG_3 != 0 &&
+			text != "" {
+				e.Buffer = tokenize(text, 3)
+				text = e.Buffer[0]
+			}
+
+			return text, true
 		}
+
 		return "", false
 	}
 
@@ -107,6 +136,7 @@ func (e *Extractor) MoveUntilSavedLine() {
 
 func (e *Extractor) Rewind() {
 	e.Scanner = bufio.NewScanner(strings.NewReader(e.RawData))
+	e.Buffer = []string{}
 	e.CurrLine = 0
 	e.PrevToken = ""
 	e.CurrToken = ""
@@ -268,6 +298,34 @@ func removeAccents(s string) string {
 	return r.Replace(s)
 }
 
+// split a line into words that not exceed the max continuous spaces
+func tokenize(line string, max int) []string {
+	var tokens []string
+	var buffer strings.Builder
+	var spaces int
+
+	line = strings.TrimSpace(line)
+	for _, letter := range line {
+		if letter == ' ' {
+			spaces++
+			buffer.WriteRune(letter)
+			continue
+		}
+
+		if spaces >= max {
+			token := strings.TrimSpace(buffer.String())
+			if token != "" {	
+				tokens = append(tokens, token)
+			}
+			buffer.Reset()
+		}
+		spaces = 0
+		buffer.WriteRune(letter)
+	}
+	tokens = append(tokens, strings.TrimSpace(buffer.String()))
+	return tokens
+}
+
 /*
 legacy code support
 don't use these functions
@@ -275,8 +333,6 @@ use extractor struct and methods instead
 
 the extractions that using these functions will be reviewed
 */
-
-var countries = map[string]bool{}
 
 // MoveUntil finds a word and stops the scan there.
 func MoveUntil(scanner *bufio.Scanner, search string, exact bool) *bufio.Scanner {
@@ -337,27 +393,4 @@ func stringToYear(line string) int {
 func isBarCode(line string) bool {
 	matched, _ := regexp.MatchString(`[0-9]{5,6}-[0-9]{5,7}-[0-9]{1,3}`, line)
 	return matched
-}
-
-func isCountry(line string) bool {
-
-	if _, ok := countries[line]; ok {
-		return true
-	}
-
-	resp, err := http.Get("https://restcountries.eu/rest/v2/name/" + line)
-
-	if err != nil {
-		return false
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 404 {
-		return false
-	}
-
-	countries[line] = true
-
-	return true
 }

@@ -77,10 +77,19 @@ func ParsePDF(file io.Reader) ParserData {
 		Data:    nil,
 		Raw:     make([]string, 0),
 	}
-	res, err := docconv.Convert(file, "application/pdf", true)
+	res, err := docconv.Convert(file, "application/pdf", false)
 
 	if err != nil {
 		parser.addError(err)
+		parser.Status = 1
+		return parser
+	}
+
+	// maintain original physical layout
+	pl_res, pl_err := docconv.Convert(file, "application/pdf", true)
+
+	if pl_err != nil {
+		parser.addError(pl_err)
 		parser.Status = 1
 		return parser
 	}
@@ -99,7 +108,7 @@ func ParsePDF(file io.Reader) ParserData {
 	d.Conyuge = parser.checkStr(Spouse(NewExtractor(res.Body)))
 
 	// Jobs
-	d.Instituciones = Jobs(NewExtractor(res.Body), &parser)
+	d.Instituciones = Jobs(NewExtractor(pl_res.Body), &parser)
 
 	// Deposits
 	scanner := bufio.NewScanner(strings.NewReader(res.Body))
@@ -172,16 +181,18 @@ func ParsePDF(file io.Reader) ParserData {
 
 	d.CalculatePatrimony()
 
-	if d.Assets != d.Resumen.TotalActivo {
-		parser.addMessage("calculated assets and summary assets does not match")
-	}
-
-	if d.Liabilities != d.Resumen.TotalPasivo {
-		parser.addMessage("calculated liabilities and summary liabilities does not match")
-	}
-
-	if d.NetPatrimony != d.Resumen.PatrimonioNeto {
-		parser.addMessage("calculated net patrimony and summary net patrimony does not match")
+	if d.Resumen != nil {
+		if d.Assets != d.Resumen.TotalActivo {
+			parser.addMessage("calculated assets and summary assets does not match")
+		}
+	
+		if d.Liabilities != d.Resumen.TotalPasivo {
+			parser.addMessage("calculated liabilities and summary liabilities does not match")
+		}
+	
+		if d.NetPatrimony != d.Resumen.PatrimonioNeto {
+			parser.addMessage("calculated net patrimony and summary net patrimony does not match")
+		}
 	}
 
 	parser.Data = d
