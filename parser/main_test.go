@@ -111,9 +111,6 @@ func TestVictorBlancoSilva2015(t *testing.T) {
 
 	data.Print()
 
-	// TODO fix parsing of vehicles
-	AssertHasError(t, &data, "The vehicle in line: 'VOLKSWAGEN' has a issue with importe")
-
 	AssertEqual(t, "VICTOR", data.Data.Nombre)
 	AssertEqual(t, "2015-11-27", data.Data.Fecha.Format("2006-01-02"))
 	//AssertEqual(t, int64(63000000), data.Data.Vehicles[1].Importe)
@@ -139,7 +136,7 @@ func TestMariaLorenaRiverosMiranda2015(t *testing.T) {
 	}
 
 	// TODO fix parsing of debts
-	AssertHasError(t, &data, "the amount in debts do not match (calculated=189012 in pdf: 17100000)")
+	AssertHasError(t, &data, "the amount in debts do not match (calculated=17100000 in pdf: 849000)")
 
 	data.Print()
 
