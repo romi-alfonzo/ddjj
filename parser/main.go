@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/InstIDEA/ddjj/parser/extract"
+	"github.com/InstIDEA/ddjj/parser/server"
 	"os"
 )
 
@@ -18,8 +19,12 @@ func handleSingleFile(filePath string) extract.ParserData {
 
 func main() {
 	if len(os.Args) <= 1 {
-		fmt.Println("Usage: ./parser file.pdf")
+		fmt.Println("Usage: parser file.pdf")
 		os.Exit(1)
+		return
+	}
+	if os.Args[1] == "serve" {
+		server.InitServer()
 		return
 	}
 	parsed := handleSingleFile(os.Args[1])

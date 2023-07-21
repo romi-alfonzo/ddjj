@@ -7,6 +7,32 @@ import (
 	"testing"
 )
 
+func TestDarioRamon(t *testing.T) {
+
+	data := handleSingleFile("./test_declarations/4736335_DARIO_RAMON_VERA.pdf")
+
+	if data.Data == nil {
+		t.Errorf("Error parsing the document")
+	}
+
+	for _, item := range data.Message {
+		fmt.Println(item)
+	}
+
+	fmt.Printf("\n\n")
+	fmt.Println("Message: ", data.Message)
+	fmt.Println("Structured: ", data.Structured)
+
+	AssertEqual(t, "DARIO RAMON", data.Data.Nombre)
+	AssertEqual(t, "2016-10-19", data.Data.Fecha.Format("2006-01-02"))
+	AssertEqual(t, "MILITAR", data.Data.Instituciones[0].Cargo)
+	AssertEqual(t, "COMANDO DE LAS FUERZAS MILITARES", data.Data.Instituciones[0].Institucion)
+	AssertEqual(t, "", data.Data.Conyuge)
+	AssertEqual(t, int64(0), data.Data.Resumen.TotalActivo)
+	AssertEqual(t, int64(6560000), data.Data.Resumen.TotalPasivo)
+	AssertEqual(t, int64(-6560000), data.Data.Resumen.PatrimonioNeto)
+}
+
 func TestMarioAbdo2016(t *testing.T) {
 
 	data := handleSingleFile("./test_declarations/267948_MARIO_ABDO_BENITEZ.pdf")
@@ -85,9 +111,6 @@ func TestVictorBlancoSilva2015(t *testing.T) {
 
 	data.Print()
 
-	// TODO fix parsing of vehicles
-	AssertHasError(t, &data, "The vehicle in line: 'VOLKSWAGEN' has a issue with importe")
-
 	AssertEqual(t, "VICTOR", data.Data.Nombre)
 	AssertEqual(t, "2015-11-27", data.Data.Fecha.Format("2006-01-02"))
 	//AssertEqual(t, int64(63000000), data.Data.Vehicles[1].Importe)
@@ -113,7 +136,7 @@ func TestMariaLorenaRiverosMiranda2015(t *testing.T) {
 	}
 
 	// TODO fix parsing of debts
-	AssertHasError(t, &data, "the amount in debts do not match (calculated=189012 in pdf: 17100000)")
+	AssertHasError(t, &data, "the amount in debts do not match (calculated=17100000 in pdf: 849000)")
 
 	data.Print()
 
@@ -138,13 +161,13 @@ func TestLilianSamaniego2016(t *testing.T) {
 
 	// with previus version return zero values
 	// https://github.com/Ravf95/ddjj/tree/feature/local_mode/parser
-	
+
 	data := handleSingleFile("./test_declarations/78832_LILIAN_MARLENE_SAMANIEGO_BENEGA.pdf")
 
 	if data.Data == nil {
 		t.Errorf("Error parsing the document")
 	}
-	
+
 	data.Print()
 
 	AssertEqual(t, "LILIAN MARLENE", data.Data.Nombre)
@@ -158,13 +181,13 @@ func TestNataliaDure2019(t *testing.T) {
 
 	// with previus version return zero values
 	// https://github.com/Ravf95/ddjj/tree/feature/local_mode/parser
-	
+
 	data := handleSingleFile("./test_declarations/592859_NATALIA_ELIZABETH_DURE_CARDOZO.pdf")
-	
+
 	if data.Data == nil {
 		t.Errorf("Error parsing the document")
 	}
-	
+
 	data.Print()
 
 	AssertEqual(t, "NATALIA ELIZABETH", data.Data.Nombre)

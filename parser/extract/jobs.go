@@ -2,8 +2,8 @@ package extract
 
 import (
 	"fmt"
+	"github.com/InstIDEA/ddjj/parser/declaration"
 	"strings"
-	"github.com/InstIDEA/ddjj/parser/declaration"	
 )
 
 func Jobs(e *Extractor, parser *ParserData) []*declaration.Job {
@@ -18,10 +18,10 @@ func Jobs(e *Extractor, parser *ParserData) []*declaration.Job {
 	e.Rewind()
 	e.BindFlag(EXTRACTOR_FLAG_3)
 
-	job := &declaration.Job{ }
+	job := &declaration.Job{}
 
 	if counter > 0 &&
-	e.MoveUntilStartWith(CurrToken, "DATOS LABORALES") {
+		e.MoveUntilStartWith(CurrToken, "DATOS LABORALES") {
 
 		for e.Scan() {
 			if counter == successful {
@@ -36,8 +36,7 @@ func Jobs(e *Extractor, parser *ParserData) []*declaration.Job {
 				}
 			}
 
-			if job.Cargo == "" &&
-			job.Institucion != "" {
+			if job.Cargo == "" && job.Institucion != "" {
 				value := getJobTitle(e)
 
 				if !isJobFormField(value) {
@@ -48,13 +47,13 @@ func Jobs(e *Extractor, parser *ParserData) []*declaration.Job {
 			if job.Cargo != "" && job.Institucion != "" {
 				successful++
 				instituciones = append(instituciones, job)
-				job = &declaration.Job{ }
+				job = &declaration.Job{}
 			}
 		}
 	}
 
 	if successful != counter {
-		parser.addMessage(fmt.Sprintf("ignored jobs: %d/%d", counter - successful, counter))
+		parser.addMessage(fmt.Sprintf("ignored jobs: %d/%d", counter-successful, counter))
 	}
 
 	if instituciones == nil {
@@ -74,8 +73,8 @@ func getJobTitle(e *Extractor) string {
 		}
 	}
 
-	if strings.Contains(e.PrevToken, "CARGO") && 
-	strings.Contains(e.CurrToken, "FECHA EGRESO") {
+	if strings.Contains(e.PrevToken, "CARGO") &&
+		strings.Contains(e.CurrToken, "FECHA EGRESO") {
 		return e.NextToken
 
 	}
@@ -86,12 +85,12 @@ func getJobTitle(e *Extractor) string {
 func getJobInst(e *Extractor) string {
 
 	if strings.Contains(e.PrevToken, "INSTITUCIÓN") &&
-	strings.Contains(e.NextToken, "ACTO ADM. COM") {
+		strings.Contains(e.NextToken, "ACTO ADM. COM") {
 		return e.CurrToken
 	}
 
 	if strings.Contains(e.PrevToken, "DIRECCIÓN") &&
-	isNumber(e.CurrToken) {
+		isNumber(e.CurrToken) {
 		return e.NextToken
 	}
 
@@ -110,7 +109,7 @@ func countJobs(e *Extractor) int {
 }
 
 func isJobFormField(s string) bool {
-	formField := []string {
+	formField := []string{
 		"TIPO",
 		"INSTITUCION:",
 		"DIRECCION:",

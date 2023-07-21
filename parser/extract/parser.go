@@ -12,10 +12,11 @@ import (
 )
 
 type ParserData struct {
-	Message []string                 `json:"message"`
-	Status  int                      `json:"status"`
-	Data    *declaration.Declaration `json:"data"`
-	Raw     []string                 `json:"raw"`
+	Message    []string                 `json:"message"`
+	Status     int                      `json:"status"`
+	Data       *declaration.Declaration `json:"data"`
+	Raw        []string                 `json:"raw"`
+	Structured []string                 `json:"raw"`
 }
 
 func (parser *ParserData) addMessage(msg string) {
@@ -28,6 +29,10 @@ func (parser *ParserData) addError(msg error) {
 
 func (parser *ParserData) rawData(s string) {
 	parser.Raw = append(parser.Raw, s)
+}
+
+func (parser *ParserData) structured(s string) {
+	parser.Structured = append(parser.Structured, s)
 }
 
 func (parser *ParserData) Print() {
@@ -95,8 +100,9 @@ func ParsePDF(file io.Reader) ParserData {
 	}
 
 	parser.rawData(res.Body)
+	parser.structured(pl_res.Body)
 
-	d := &declaration.Declaration{}	
+	d := &declaration.Declaration{}
 
 	// Basic Info.
 	d.Fecha = parser.check(Date(NewExtractor(res.Body)))
@@ -185,11 +191,11 @@ func ParsePDF(file io.Reader) ParserData {
 		if d.Assets != d.Resumen.TotalActivo {
 			parser.addMessage("calculated assets and summary assets does not match")
 		}
-	
+
 		if d.Liabilities != d.Resumen.TotalPasivo {
 			parser.addMessage("calculated liabilities and summary liabilities does not match")
 		}
-	
+
 		if d.NetPatrimony != d.Resumen.PatrimonioNeto {
 			parser.addMessage("calculated net patrimony and summary net patrimony does not match")
 		}
