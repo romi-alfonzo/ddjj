@@ -2,13 +2,14 @@ package extract
 
 import (
 	"bufio"
-	"code.sajari.com/docconv"
 	"encoding/json"
 	"fmt"
-	"github.com/InstIDEA/ddjj/parser/declaration"
 	"io"
 	"strings"
 	"time"
+
+	"code.sajari.com/docconv"
+	"github.com/InstIDEA/ddjj/parser/declaration"
 )
 
 type ParserData struct {
@@ -156,11 +157,8 @@ func ParsePDF(file io.Reader) ParserData {
 	}
 
 	// Other assets
-	scanner = bufio.NewScanner(strings.NewReader(res.Body))
-	d.OtherAssets, err = Assets(scanner)
-	if err != nil {
-		parser.addError(err)
-	}
+	scanner = bufio.NewScanner(strings.NewReader(pl_res.Body))
+	d.OtherAssets, err = Assets(NewExtractor(pl_res.Body), &parser)
 
 	// Debts
 	scanner = bufio.NewScanner(strings.NewReader(res.Body))
