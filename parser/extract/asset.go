@@ -8,18 +8,94 @@ import (
 )
 
 func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error) {
-
-	e.BindFlag(EXTRACTOR_FLAG_1) //remueve las lineas en blanco
-	e.BindFlag(EXTRACTOR_FLAG_2) //remueve los espacios en los extremos
+	var assets []*declaration.OtherAsset //lsit of extracted assets
+	asset := &declaration.OtherAsset{}   //aux for the actual extraction
+	e.BindFlag(EXTRACTOR_FLAG_1)         //remueve las lineas en blanco
+	e.BindFlag(EXTRACTOR_FLAG_2)         //remueve los espacios en los extremos
 	//EXTRACTOR_FLAG_3 crea nuevos tokens siempre que dentro de la linea haya mas o igual a 3 espacios
-
-	if e.MoveUntilStartWith(CurrToken, "#              DES") {
+	var bandera bool
+	bandera = false
+	if e.MoveUntilStartWith(CurrToken, "1.9 OTROS ACTIVOS") {
 		for e.Scan() {
-			fmt.Println(e.CurrToken)
+			// other assets table header and OBS are omitted
+			if isAssetFormField(e.CurrToken) {
+				bandera = true //we are in the table records because we have the header
+				continue
+			}
+			if strings.Contains(e.CurrToken, "OBS:") {
+				continue
+			}
+			// final of others assets of current page
 			if strings.Contains(e.CurrToken, "TOTAL OTROS ACTIVOS") {
-				break
+				bandera = false
+			}
+			//if the ban it's true, we can proceed with the extraction
+			if bandera {
+				values := tokenize(e.CurrToken, 5)
+				//fmt.Println("La linea tiene ", len(values), "Es numerico el primero: ", isNumber(e.CurrToken))
+				//case 1: Description is in two lines
+				if len(values) == 1 && isNumber(e.CurrToken) {
+					//fmt.Println("Prev: " + e.PrevToken + " Curr: " + e.CurrToken + " Next: " + e.NextToken)
+					description := e.PrevToken + " " + e.NextToken
+					values = append(values)
+					fmt.Println("Presiona Enter para continuar...")
+					fmt.Scanln()
+				}
+				//case 2: Enterprise name is in two lines
+				if len(values) == 2 {
+					enterpriseName := e.PrevToken
+					e.Scan() // we need to save the description in this part
+					fmt.Println(enterpriseName + " " + e.CurrToken)
+					fmt.Println("Presiona Enter para continuar...")
+					fmt.Scanln()
+				}
 			}
 		}
 	}
 	return nil, nil
+}
+
+/*
+Function to check if a given string is or not the header of the section.
+Parameter: string s
+Return: True or false
+*/
+
+func isAssetFormField(s string) bool {
+	formField := []string{
+		"DESCRIPCION",
+		"EMPRESA",
+		"RUC",
+		"PAIS",
+		"CANT.",
+		"PRECIO UNI.",
+		"IMPORTE",
+	}
+
+	s = removeAccents(s)
+	for _, value := range formField {
+		if !strings.Contains(s, value) {
+			return false
+		}
+	}
+
+	return true
+}
+
+/*
+Function to load the extracted values into the OtherAsset structure.
+Parameters: values in an array of strings. The first element is not inserted because it is the index and not relevant.
+Return: an instance of OtherAsset with the values from the array
+*/
+
+func getAsset(values []string) *declaration.OtherAsset {
+	return &declaration.OtherAsset{
+		Descripcion: values[1],
+		Empresa:     values[2],
+		RUC:         values[3],
+		Pais:        values[4],
+		Cantidad:    stringToInt64(values[5]),
+		Precio:      stringToInt64(values[6]),
+		Importe:     stringToInt64(values[7]),
+	}
 }
