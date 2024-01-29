@@ -86,52 +86,6 @@ func countAssets(e *Extractor, assets []*declaration.OtherAsset) []*declaration.
 }
 
 /*
-Function to check if a given string is or not the header of the section.
-Parameter: string s
-Return: True or false
-*/
-
-func isAssetFormField(s string) bool {
-	formField := []string{
-		"#",
-		"DESCRIPCION",
-		"EMPRESA",
-		"RUC",
-		"PAIS",
-		"CANT.",
-		"PRECIO UNI.",
-		"IMPORTE",
-	}
-
-	s = removeAccents(s)
-	for _, value := range formField {
-		if isCurrLine(s, value) {
-			return true
-		}
-	}
-
-	return false
-}
-
-/*
-Function to load the extracted values into the OtherAsset structure.
-Parameters: values in an array of strings. The first element is not inserted because it is the index and not relevant.
-Return: an instance of OtherAsset with the values from the array
-*/
-
-func getAsset3(values []string) *declaration.OtherAsset {
-	return &declaration.OtherAsset{
-		Descripcion: values[1],
-		Empresa:     values[2],
-		RUC:         values[3],
-		Pais:        values[4],
-		Cantidad:    stringToInt64(values[5]),
-		Precio:      stringToInt64(values[6]),
-		Importe:     stringToInt64(values[7]),
-	}
-}
-
-/*
 Function to calculate the total of the extracted assets.
 */
 
