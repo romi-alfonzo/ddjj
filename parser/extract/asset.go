@@ -1,7 +1,6 @@
 package extract
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -33,7 +32,6 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 			//if the ban it's true, we can proceed with the extraction
 			if bandera {
 				values := tokenize(e.CurrToken, 3)
-				//fmt.Println("La linea tiene ", len(values), "Es numerico el primero: ", isNumber(e.CurrToken))
 				//case 1: Description is in two lines
 				//in this case the lines are
 				//descPart1
@@ -41,7 +39,6 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 				//descPart2
 				//rest of row
 				if len(values) == 1 && isNumber(e.CurrToken) {
-					//fmt.Println("Prev: " + e.PrevToken + " Curr: " + e.CurrToken + " Next: " + e.NextToken)
 					description := e.PrevToken + " " + e.NextToken
 					// moving the current token to the next part
 					e.Scan()
@@ -70,8 +67,8 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 					fixed := []string{"#", description, allName}
 					values = append(fixed, tokenize(e.CurrToken, 3)...)
 
-				}
-				//country in two lines
+				} else
+				//case 3: country in two lines
 				//namePart1
 				//num + description + enterprise + ruc
 				//namePart2
@@ -95,23 +92,9 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 				}
 			}
 		}
-		fmt.Println("Len: ", len(assets))
+		fmt.Println("Cantidad de otros activos: ", len(assets))
 	}
-	printOtherAsset(assets)
-	return nil, nil
-}
-func printOtherAsset(assets []*declaration.OtherAsset) {
-	for _, asset := range assets {
-		// Convert struct to JSON for printing
-		assetJSON, err := json.MarshalIndent(asset, "", "  ")
-		if err != nil {
-			fmt.Println("Error marshalling JSON:", err)
-			return
-		}
-
-		// Print the JSON representation of the struct
-		fmt.Println(string(assetJSON))
-	}
+	return assets, nil
 }
 
 /*
