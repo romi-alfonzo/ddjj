@@ -1,6 +1,7 @@
 package extract
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -34,25 +35,70 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 				values := tokenize(e.CurrToken, 5)
 				//fmt.Println("La linea tiene ", len(values), "Es numerico el primero: ", isNumber(e.CurrToken))
 				//case 1: Description is in two lines
+				//in this case the lines are
+				//descPart1
+				//number of the register
+				//descPart2
+				//rest of row
 				if len(values) == 1 && isNumber(e.CurrToken) {
 					//fmt.Println("Prev: " + e.PrevToken + " Curr: " + e.CurrToken + " Next: " + e.NextToken)
 					description := e.PrevToken + " " + e.NextToken
-					values = append(values)
-					fmt.Println("Presiona Enter para continuar...")
-					fmt.Scanln()
+					// moving the current token to the next part
+					e.Scan()
+					e.Scan()
+
+					//building the struct of other assets
+					fixed := []string{"#", description}
+					values := append(fixed, tokenize(e.CurrToken, 4)...)
+
+					asset = getAsset(values)
+
 				}
 				//case 2: Enterprise name is in two lines
+				//in this case the lines are
+				//enterprisePart1
+				//number of the register + description
+				//enterprisePart2
+				//rest of row
 				if len(values) == 2 {
-					enterpriseName := e.PrevToken
+					enterpriseNamePart1 := e.PrevToken
+					//extracting the description of the currentToken thats saved on values array
+					description := values[1]
 					e.Scan() // we need to save the description in this part
-					fmt.Println(enterpriseName + " " + e.CurrToken)
-					fmt.Println("Presiona Enter para continuar...")
-					fmt.Scanln()
+					allName := enterpriseNamePart1 + " " + e.CurrToken
+					//moving to the rest of the row
+					e.Scan()
+
+					//building the struct of other assets
+					fixed := []string{"#", description, allName}
+					values := append(fixed, tokenize(e.CurrToken, 4)...)
+					fmt.Println("Values ", values)
+					asset = getAsset(values)
+				}
+				if len(values) == 8 {
+					fmt.Println("Asset: ", asset)
+					assets = append(assets, asset)
 				}
 			}
 		}
+		// Print each element in the array
+		for _, asset := range assets {
+			printOtherAsset(asset)
+		}
+		fmt.Println("Len: ", len(assets))
 	}
 	return nil, nil
+}
+func printOtherAsset(asset *declaration.OtherAsset) {
+	// Convert struct to JSON for printing
+	assetJSON, err := json.MarshalIndent(asset, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+		return
+	}
+
+	// Print the JSON representation of the struct
+	fmt.Println(string(assetJSON))
 }
 
 /*
