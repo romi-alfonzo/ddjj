@@ -15,6 +15,8 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 	//EXTRACTOR_FLAG_3 crea nuevos tokens siempre que dentro de la linea haya mas o igual a 3 espacios
 	var bandera bool
 	bandera = false
+	counter := 0
+	successful := 0
 	if e.MoveUntilStartWith(CurrToken, "1.9 OTROS ACTIVOS") {
 		for e.Scan() {
 			// other assets table header and OBS are omitted
@@ -22,7 +24,8 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 				bandera = true //we are in the table records because we have the header
 				continue
 			}
-			if strings.Contains(e.CurrToken, "OBS:") {
+			if strings.Contains(e.CurrToken, "OBS:") && bandera {
+				counter++
 				continue
 			}
 			// final of others assets of current page
@@ -86,14 +89,25 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 					fixed := []string{"#", description, enterprise, ruc, country}
 					values = append(fixed, tokenize(e.CurrToken, 4)...)
 				}
+
 				if len(values) == 8 {
 					asset = getAsset(values)
 					assets = append(assets, asset)
 				}
 			}
 		}
-		fmt.Println("Cantidad de otros activos: ", len(assets))
+		successful = len(assets)
 	}
+	if successful != counter {
+		fmt.Println(successful)
+		parser.addMessage(fmt.Sprintf("ignored assets: %d/%d", counter-successful, counter))
+	}
+
+	if assets == nil {
+		parser.addError(fmt.Errorf("failed when extracting assets"))
+		return nil, nil
+	}
+
 	return assets, nil
 }
 
