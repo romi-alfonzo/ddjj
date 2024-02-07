@@ -99,7 +99,6 @@ func Assets(e *Extractor, parser *ParserData) ([]*declaration.OtherAsset, error)
 		successful = len(assets)
 	}
 	if successful != counter {
-		fmt.Println(successful)
 		parser.addMessage(fmt.Sprintf("ignored assets: %d/%d", counter-successful, counter))
 	}
 

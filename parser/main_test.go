@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/InstIDEA/ddjj/parser/extract"
 	"reflect"
 	"testing"
+
+	"github.com/InstIDEA/ddjj/parser/extract"
 )
 
 func TestDarioRamon(t *testing.T) {
@@ -192,6 +193,23 @@ func TestNataliaDure2019(t *testing.T) {
 
 	AssertEqual(t, "NATALIA ELIZABETH", data.Data.Nombre)
 	AssertEqual(t, "2019-03-07", data.Data.Fecha.Format("2006-01-02"))
+}
+
+func TestHorarioCartes2021(t *testing.T) {
+
+	data := handleSingleFile("./test_declarations/961570_HORACIO_MANUEL_CARTES_JARA.pdf")
+
+	if data.Data == nil {
+		t.Errorf("Error parsing the document")
+	}
+
+	data.Print()
+
+	AssertEqual(t, "HORACIO MANUEL", data.Data.Nombre)
+	AssertEqual(t, "2021-09-30", data.Data.Fecha.Format("2006-01-02"))
+	AssertEqual(t, int64(3384230397736), data.Data.Resumen.TotalActivo)
+	AssertEqual(t, int64(2256141600), data.Data.Resumen.TotalPasivo)
+	AssertEqual(t, int64(3381974256136), data.Data.Resumen.PatrimonioNeto)
 }
 
 // AssertEqual checks if values are equal
