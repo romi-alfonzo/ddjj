@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/InstIDEA/ddjj/parser/extract"
 	"reflect"
 	"testing"
+
+	"github.com/InstIDEA/ddjj/parser/extract"
 )
 
 func TestDarioRamon(t *testing.T) {
@@ -192,6 +193,38 @@ func TestNataliaDure2019(t *testing.T) {
 
 	AssertEqual(t, "NATALIA ELIZABETH", data.Data.Nombre)
 	AssertEqual(t, "2019-03-07", data.Data.Fecha.Format("2006-01-02"))
+}
+
+func TestEddyNeufeld2016(t *testing.T) {
+
+	data := handleSingleFile("./test_declarations/2024982_9fb18b249891f3e2f290e33e588d98b1.pdf")
+
+	if data.Data == nil {
+		t.Errorf("Error parsing the document")
+	}
+
+	for _, item := range data.Message {
+		fmt.Println(item)
+	}
+
+	fmt.Printf("\n\n")
+	fmt.Println("Nombre: ", data.Data.Nombre)
+	fmt.Println("Fecha: ", data.Data.Fecha)
+	fmt.Println("Conyuge: ", data.Data.Conyuge)
+	fmt.Println("Cargo: ", data.Data.Instituciones[0].Cargo)
+	fmt.Println("Institucion: ", data.Data.Instituciones[0].Institucion)
+	fmt.Println("Resumen Activos: ", data.Data.Resumen.TotalActivo)
+	fmt.Println("Resumen Pasivos: ", data.Data.Resumen.TotalPasivo)
+	fmt.Println("Resumen Patrimonio Neto: ", data.Data.Resumen.PatrimonioNeto)
+
+	AssertEqual(t, "EDDY", data.Data.Nombre)
+	AssertEqual(t, "2016-01-04", data.Data.Fecha.Format("2006-01-02"))
+	AssertEqual(t, "INTENDENTE MUNICIPAL", data.Data.Instituciones[0].Cargo)
+	AssertEqual(t, "MUNICIPALIDAD DE RAUL ARSENIO OVIEDO", data.Data.Instituciones[0].Institucion)
+	AssertEqual(t, "MIRNA ELIZABETH FLORENCIAÑEZ NEUFELD", data.Data.Conyuge)
+	AssertEqual(t, int64(108601862791), data.Data.Resumen.TotalActivo)
+	AssertEqual(t, int64(38970873094), data.Data.Resumen.TotalPasivo)
+	AssertEqual(t, int64(69630989697), data.Data.Resumen.PatrimonioNeto)
 }
 
 // AssertEqual checks if values are equal
